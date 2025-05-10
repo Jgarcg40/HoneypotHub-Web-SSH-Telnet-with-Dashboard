@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Mensaje Enviado - Portal de Servicios{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-success shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-check-circle me-2"></i>Mensaje Enviado Correctamente</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-envelope-open-text text-success fa-5x mb-3"></i>
+                        <h5>Gracias por ponerse en contacto con nosotros</h5>
+                        <p class="lead">Hemos recibido su mensaje correctamente.</p>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <p><i class="fas fa-info-circle me-2"></i>Uno de nuestros representantes revisará su solicitud y se pondrá en contacto con usted a la brevedad posible. Por favor, tenga en cuenta que el tiempo de respuesta puede variar dependiendo del volumen de solicitudes.</p>
+                    </div>
+                    
+                    <p>Su mensaje ha sido registrado con éxito en nuestro sistema. Le recomendamos guardar esta confirmación para futura referencia.</p>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <a href="{{ url_for('index') }}" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i>Volver a la página principal
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

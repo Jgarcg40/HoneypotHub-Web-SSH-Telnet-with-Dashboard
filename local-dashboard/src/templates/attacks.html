@@ -1,0 +1,556 @@
+{% extends 'base.html' %}
+
+{% block title %}Ataques - Dashboard de Análisis{% endblock %}
+
+{% block page_title %}Ataques{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h2 class="mb-4">Ataques Detectados</h2>
+    
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle"></i> Se han detectado patrones de ataque basados en comportamientos sospechosos, múltiples intentos fallidos o uso de herramientas automatizadas.
+    </div>
+    
+   
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-chart-pie"></i> Comandos de Ataque Detectados
+                    </h5>
+                    <div class="table-responsive">
+                        <table id="attack-commands-table" class="table table-striped table-hover">
+                            <thead class="table-warning">
+                                <tr>
+                                    <th>Comando Utilizado</th>
+                                    <th>Tipo de Ataque</th>
+                                    <th>Cantidad</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                               
+                                <tr>
+                                    <td colspan="3" class="text-center">Cargando datos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-user-secret"></i> IPs con Más Ataques
+                    </h5>
+                    <div class="table-responsive">
+                        <table id="attacking-ips-table" class="table table-striped table-hover">
+                            <thead class="table-warning">
+                                <tr>
+                                    <th>IP</th>
+                                    <th>Ubicación</th>
+                                    <th>Ataques</th>
+                                    <th>Último Visto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+                                <tr>
+                                    <td colspan="4" class="text-center">Cargando datos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-shield-alt"></i> Registro de Ataques
+                    </h5>
+                    <div class="table-responsive">
+                        <table id="attacks-table" class="table table-striped table-hover">
+                            <thead class="table-danger">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>IP / Origen</th>
+                                    <th>Tipo de Ataque</th>
+                                    <th>Comando</th>
+                                    <th>User Agent</th>
+                                    <th>Maliciosa</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+                                <tr>
+                                    <td colspan="6" class="text-center">Cargando datos...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Tipos de Ataques Comunes</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card mb-3" style="height: 100%;">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title"><i class="fas fa-database text-danger me-2"></i>SQL Injection</h5>
+                                <p class="card-text flex-grow-1">Intento de manipular consultas SQL para acceder o modificar datos no autorizados.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mb-3" style="height: 100%;">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title"><i class="fas fa-code text-warning me-2"></i>XSS (Cross-Site Scripting)</h5>
+                                <p class="card-text flex-grow-1">Inyección de código malicioso en sitios web para ejecutarse en el navegador de los usuarios.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mb-3" style="height: 100%;">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title"><i class="fas fa-folder-open text-info me-2"></i>Path Traversal</h5>
+                                <p class="card-text flex-grow-1">Intento de acceder a archivos del sistema fuera del directorio autorizado.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+       
+        setTimeout(loadAttacks, 1000);
+        
+        
+        setInterval(loadAttacks, 60000);
+    });
+    
+   
+    function escapeHtml(unsafe) {
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+    }
+    
+    
+    function formatIpAddress(ip, country_or_code, country_name, city, is_malicious, is_vpn) {
+       
+        console.log("formatIpAddress recibió:", {
+            ip: ip,
+            country_or_code: country_or_code,
+            country_name: country_name,
+            city: city,
+            is_malicious: is_malicious,
+            is_vpn: is_vpn
+        });
+        
+        let country = '';
+        let countryCode = '';
+        
+        
+        is_malicious = (is_malicious === true || is_malicious === 'true');
+        is_vpn = (is_vpn === true || is_vpn === 'true');
+        
+        
+        if (typeof country_name !== 'undefined' && country_name) {
+            countryCode = country_or_code;
+            country = country_name;
+        } else {
+            country = country_or_code;
+            
+            if (country && typeof country === 'string' && country.length === 2) {
+                countryCode = country;
+            }
+        }
+        
+        let cityText = '';
+        if (typeof city === 'string' && city !== 'true' && city !== 'false') {
+            cityText = city;
+        }
+        
+        if (country === 'true' || country === 'false' || typeof country === 'boolean') {
+            country = '';
+        }
+        
+        let statusClass = 'status-safe';
+        let statusTitle = 'IP Normal';
+        
+        if (is_malicious) {
+            statusClass = 'status-danger';
+            statusTitle = 'IP Maliciosa';
+        } else if (is_vpn) {
+            statusClass = 'status-warning';
+            statusTitle = 'Conexión Anónima (VPN/Proxy)';
+        }
+        
+        const code = countryCode ? countryCode.toLowerCase() : '';
+        const flag = code ? 
+            `<img src="https://flagcdn.com/16x12/${code}.png" class="ip-flag" alt="${country}" title="${country}">` : '';
+        
+        const locationText = cityText && country ? `${cityText}, ${country}` : (cityText || country || 'Ubicación desconocida');
+        
+        const badges = [];
+        if (is_malicious) {
+            badges.push('<span class="badge bg-danger ip-info-badge">Maliciosa</span>');
+        }
+        if (is_vpn) {
+            badges.push('<span class="badge bg-warning text-dark ip-info-badge">VPN</span>');
+        }
+        
+        return `
+            <div class="ip-tooltip">
+                <span class="ip-container">
+                    <span class="status-indicator ${statusClass}" title="${statusTitle}"></span>
+                    ${ip || 'Desconocida'}
+                    ${flag}
+                    ${badges.join('')}
+                </span>
+                <div class="tooltip-content">
+                    <div><strong>IP:</strong> ${ip || 'Desconocida'}</div>
+                    <div><strong>País:</strong> ${country || 'Desconocido'}</div>
+                    <div><strong>Ciudad:</strong> ${cityText || 'Desconocido'}</div>
+                    <div><strong>VPN/Proxy:</strong> ${is_vpn ? 'Sí' : 'No'}</div>
+                    <div><strong>Maliciosa:</strong> ${is_malicious ? 'Sí' : 'No'}</div>
+                </div>
+                <div class="ip-location">${locationText}</div>
+            </div>
+        `;
+    }
+    
+    function loadAttacks() {
+        fetch('/api/attacks')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Datos de ataques recibidos:", data);
+                
+                const attacks = data.attacks || [];
+                const attackingIps = data.attacking_ips || [];
+                
+                processAttackStatistics(attacks);
+                
+                updateAttackingIpsTable(attackingIps);
+                
+                updateMainAttacksTable(attacks);
+            })
+            .catch(error => {
+                console.error('Error al cargar datos de ataques:', error);
+                
+                document.querySelector('#attacks-table tbody').innerHTML = 
+                    '<tr><td colspan="6" class="text-center text-danger">Error al cargar datos: ' + error.message + '</td></tr>';
+                document.querySelector('#attack-commands-table tbody').innerHTML = 
+                    '<tr><td colspan="3" class="text-center text-danger">Error al cargar datos: ' + error.message + '</td></tr>';
+                document.querySelector('#attacking-ips-table tbody').innerHTML = 
+                    '<tr><td colspan="4" class="text-center text-danger">Error al cargar datos: ' + error.message + '</td></tr>';
+            });
+    }
+    
+    function processAttackStatistics(data) {
+        const attackCommands = {};
+        let totalAttacks = data.length;
+        
+        data.forEach(attack => {
+            let command = "";
+            if (attack.details) {
+                command = attack.details.replace(/^Comando:\s*/, '');
+            } else if (attack.username && attack.password) {
+                command = `${attack.username} / ${attack.password}`;
+            } else if (attack.username) {
+                command = attack.username;
+            } else if (attack.password) {
+                command = attack.password;
+            } else {
+                command = "Comando no disponible";
+            }
+            
+            const attackType = attack.type || 'Desconocido';
+            const commandKey = `${command}___${attackType}`;
+            
+            if (!attackCommands[commandKey]) {
+                attackCommands[commandKey] = {
+                    command: command,
+                    type: attackType,
+                    count: 1
+                };
+            } else {
+                attackCommands[commandKey].count++;
+            }
+        });
+        
+        updateAttackCommandsTable(attackCommands, totalAttacks);
+    }
+    
+    function updateAttackCommandsTable(attackCommands, totalAttacks) {
+        const tbody = document.querySelector('#attack-commands-table tbody');
+        
+        if ($.fn.DataTable.isDataTable('#attack-commands-table')) {
+            $('#attack-commands-table').DataTable().destroy();
+        }
+        
+        tbody.innerHTML = '';
+        
+        if (Object.keys(attackCommands).length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" class="text-center">No hay datos disponibles</td></tr>';
+            return;
+        }
+        
+        const commandsArray = Object.values(attackCommands);
+        
+        commandsArray.sort((a, b) => b.count - a.count);
+        
+        commandsArray.forEach(item => {
+            const tr = document.createElement('tr');
+            
+            const commandCell = document.createElement('td');
+            commandCell.innerHTML = `<code>${escapeHtml(item.command)}</code>`;
+            tr.appendChild(commandCell);
+            
+            const typeCell = document.createElement('td');
+            typeCell.innerHTML = `<span class="badge bg-danger">${item.type}</span>`;
+            tr.appendChild(typeCell);
+            
+            const countCell = document.createElement('td');
+            countCell.textContent = item.count;
+            tr.appendChild(countCell);
+            
+            tbody.appendChild(tr);
+        });
+        
+        
+        $('#attack-commands-table').DataTable({
+            paging: true,
+            pageLength: 10,
+            order: [[2, 'desc']],
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json'
+            }
+        });
+    }
+    
+    
+    function updateAttackingIpsTable(attackingIps) {
+        const tbody = document.querySelector('#attacking-ips-table tbody');
+        
+        
+        if ($.fn.DataTable.isDataTable('#attacking-ips-table')) {
+            $('#attacking-ips-table').DataTable().destroy();
+        }
+        
+       
+        tbody.innerHTML = '';
+        
+        
+        if (!attackingIps || attackingIps.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center">No hay datos disponibles</td></tr>';
+            return;
+        }
+        
+        const top10AttackingIps = attackingIps.slice(0, 10);
+        
+        top10AttackingIps.forEach(item => {
+            const tr = document.createElement('tr');
+            
+            let countryCode = '';
+            let countryName = '';
+            
+            if (item.country_code) {
+                countryCode = item.country_code;
+            }
+            
+            if (item.country_name) {
+                countryName = item.country_name;
+            } 
+            else if (item.country) {
+                if (item.country.length === 2 && !countryCode) {
+                    countryCode = item.country;
+                } else {
+                    countryName = item.country;
+                }
+            }
+            
+            console.log("Datos de país preparados:", {
+                original: { country: item.country, country_code: item.country_code, country_name: item.country_name },
+                processed: { countryCode, countryName }
+            });
+            
+            const ipCell = document.createElement('td');
+            ipCell.innerHTML = formatIpAddress(
+                item.ip, 
+                countryCode, 
+                countryName, 
+                item.city, 
+                item.is_malicious, 
+                item.is_vpn
+            );
+            tr.appendChild(ipCell);
+            
+            const locationCell = document.createElement('td');
+            const cityText = typeof item.city === 'string' && item.city !== 'true' && item.city !== 'false' ? item.city : '';
+            const locationText = cityText && countryName ? 
+                `${cityText}, ${countryName}` : 
+                (cityText || countryName || 'Ubicación desconocida');
+            locationCell.textContent = locationText;
+            tr.appendChild(locationCell);
+            
+            const countCell = document.createElement('td');
+            countCell.innerHTML = `<span class="badge bg-danger">${item.count}</span>`;
+            tr.appendChild(countCell);
+            
+            const lastSeenCell = document.createElement('td');
+            try {
+                const date = new Date(item.last_seen);
+                lastSeenCell.textContent = `${date.toLocaleDateString()}, ${date.toLocaleTimeString()}`;
+            } catch (e) {
+                lastSeenCell.textContent = "Fecha desconocida";
+            }
+            tr.appendChild(lastSeenCell);
+            
+            tbody.appendChild(tr);
+        });
+        
+        $('#attacking-ips-table').DataTable({
+            paging: true,
+            pageLength: 10,
+            order: [[2, 'desc']],
+            language: {
+                url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json'
+            }
+        });
+    }
+    
+    function updateMainAttacksTable(attacks) {
+        const tableBody = document.querySelector('#attacks-table tbody');
+        tableBody.innerHTML = '';
+        
+        if (!attacks || attacks.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No se han detectado ataques</td></tr>';
+            return;
+        }
+        
+        attacks.sort((a, b) => {
+            return new Date(b.timestamp) - new Date(a.timestamp);
+        });
+        
+        attacks.forEach(attack => {
+            const date = new Date(attack.timestamp);
+            const formattedDate = date.toLocaleString('es-ES', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            const ipInfo = attack.ip_info || {};
+            
+            let countryCode = '';
+            let countryName = '';
+            
+            if (ipInfo.country_code) {
+                countryCode = ipInfo.country_code;
+            }
+            
+            if (ipInfo.country_name) {
+                countryName = ipInfo.country_name;
+            } 
+            else if (ipInfo.country) {
+                if (typeof ipInfo.country === 'string' && ipInfo.country.length === 2 && !countryCode) {
+                    countryCode = ipInfo.country;
+                } else {
+                    countryName = ipInfo.country;
+                }
+            }
+            
+            console.log("Datos de país en tabla de ataques:", {
+                original: { 
+                    country: ipInfo.country, 
+                    country_code: ipInfo.country_code, 
+                    country_name: ipInfo.country_name 
+                },
+                processed: { countryCode, countryName }
+            });
+            
+            const ipHtml = formatIpAddress(
+                attack.ip,
+                countryCode,
+                countryName,
+                ipInfo.city || '',
+                attack.is_malicious || ipInfo.is_malicious,
+                attack.is_anonymous || ipInfo.is_anonymous || ipInfo.is_vpn
+            );
+            
+            let command = "";
+            if (attack.details) {
+                command = attack.details.replace(/^Comando:\s*/, '');
+            } else if (attack.username && attack.password) {
+                command = `${attack.username} / ${attack.password}`;
+            } else if (attack.username) {
+                command = attack.username;
+            } else if (attack.password) {
+                command = attack.password;
+            } else {
+                command = "Comando no disponible";
+            }
+            
+            let status = '<span class="badge bg-success">No</span>';
+            if (attack.is_malicious || (attack.ip_info && attack.ip_info.is_malicious)) {
+                status = '<span class="badge bg-danger">Sí</span>';
+            } else if (attack.is_anonymous || (attack.ip_info && (attack.ip_info.is_anonymous || attack.ip_info.is_vpn))) {
+                status = '<span class="badge bg-warning text-dark">VPN</span>';
+            }
+            
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${formattedDate}</td>
+                <td>${ipHtml}</td>
+                <td><span class="badge bg-danger">${attack.type || 'Desconocido'}</span></td>
+                <td><code>${escapeHtml(command)}</code></td>
+                <td><small class="text-muted">${truncateUserAgent(attack.user_agent || 'Desconocido')}</small></td>
+                <td>${status}</td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+        
+        function truncateUserAgent(userAgent, maxLength = 30) {
+            if (userAgent.length <= maxLength) return userAgent;
+            return `<span title="${escapeHtml(userAgent)}">${escapeHtml(userAgent.substring(0, maxLength))}...</span>`;
+        }
+    }
+</script>
+{% endblock %} 

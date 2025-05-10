@@ -1,0 +1,2754 @@
+{% extends 'base.html' %}
+
+{% block title %}SSH/Telnet Honeypot - Dashboard de Análisis{% endblock %}
+
+{% block page_title %}SSH/Telnet Honeypot - Ataques Capturados{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hex-viewer {
+        font-family: monospace;
+        white-space: pre-wrap;
+        max-height: 400px;
+        overflow-y: auto;
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        padding: 10px;
+        border-radius: 4px;
+    }
+    
+    .malware-header {
+        background-color: #dc3545;
+        color: white;
+        padding: 8px;
+        border-radius: 4px 4px 0 0;
+    }
+    
+    .login-badge {
+        display: inline-block;
+        padding: 3px 6px;
+        border-radius: 3px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .success-login {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+    
+    .failed-login {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+    
+    .command-block {
+        background-color: #2d2d2d;
+        padding: 8px;
+        border-radius: 4px;
+        color: #e0e0e0;
+        font-family: monospace;
+        white-space: pre-wrap;
+        margin-bottom: 5px;
+    }
+    
+    .hash-text {
+        font-family: monospace;
+        font-size: 0.9rem;
+        word-break: break-all;
+    }
+    
+    .ip-with-flag {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .ip-flag {
+        margin-right: 5px;
+        width: 16px;
+        height: 12px;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    
+    .table-header-ssh {
+        background-color: #394b58 !important;
+        color: white !important;
+    }
+    
+    .table-header-telnet {
+        background-color: #ffa726 !important;
+        color: white !important;
+    }
+    
+    .protocol-badge-ssh {
+        background-color: #394b58;
+        color: white;
+        padding: 3px 7px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .protocol-badge-telnet {
+        background-color: #ff9800;
+        color: white;
+        padding: 3px 7px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .content-header {
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+    
+    .byte-ascii {
+        display: flex;
+        border-bottom: 1px solid #444;
+        padding: 2px 0;
+    }
+    
+    .byte-hex {
+        flex: 3;
+        color: #9cdcfe;
+    }
+    
+    .byte-text {
+        flex: 1;
+        color: #ce9178;
+        border-left: 1px solid #444;
+        padding-left: 10px;
+    }
+    
+    .country-flag {
+        width: 24px;
+        height: 18px;
+        margin-right: 8px;
+        vertical-align: middle;
+    }
+    
+    .geo-map-container {
+        height: 400px;
+        width: 100%;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+    }
+    
+    .credentials-card {
+        transition: all 0.3s ease;
+    }
+    
+    .credentials-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .credential-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 12px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .credential-name {
+        font-family: monospace;
+        font-weight: bold;
+    }
+    
+    .credential-count {
+        background-color: #6c757d;
+        color: white;
+        border-radius: 20px;
+        padding: 2px 8px;
+        font-size: 0.8rem;
+    }
+    
+    .jvectormap-container {
+        width: 100%;
+        height: 300px;
+    }
+    #world-map {
+        width: 100%;
+        height: 100%;
+    }
+    
+    .geo-distribution-header {
+        background-color: #4e73df;
+        color: white;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .country-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.2s;
+    }
+    
+    .country-item:hover {
+        background-color: rgba(78, 115, 223, 0.1);
+    }
+    
+    .country-name {
+        font-weight: 600;
+        flex-grow: 1;
+    }
+    
+    .country-count {
+        background-color: #4e73df;
+        color: white;
+        border-radius: 20px;
+        padding: 3px 10px;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+    
+    .country-percentage {
+        margin-left: 10px;
+        color: #666;
+        width: 60px;
+        text-align: right;
+    }
+    
+    .protocol-selector {
+        margin-bottom: 20px;
+    }
+    
+    .protocol-selector .btn-group .btn {
+        box-shadow: none;
+    }
+    
+    .protocol-selector .btn-dark {
+        background-color: #343a40;
+        border-color: #343a40;
+    }
+    
+    .protocol-selector .btn-warning {
+        background-color: #fd7e14;
+        border-color: #fd7e14;
+        color: white;
+    }
+    
+    .protocol-tabs .nav-link {
+        padding: 0.5rem 1rem;
+        border-radius: 0.25rem 0.25rem 0 0;
+    }
+    
+    .protocol-tabs .nav-link.active {
+        font-weight: bold;
+    }
+    
+    .protocol-tabs .nav-link.ssh-tab {
+        background-color: rgba(57, 75, 88, 0.2);
+    }
+    
+    .protocol-tabs .nav-link.ssh-tab.active {
+        background-color: #394b58;
+        color: white;
+    }
+    
+    .protocol-tabs .nav-link.telnet-tab {
+        background-color: #ffebcc;
+        color: #ff9800;
+    }
+    
+    .protocol-tabs .nav-link.telnet-tab.active {
+        background-color: #ff9800;
+        color: white;
+    }
+    
+    .protocol-tabs .nav-link.all-tab.active {
+        background-color: #6c757d;
+        color: white;
+    }
+    
+    .ip-container {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .ip-info {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .ip-address {
+        font-weight: bold;
+        margin-bottom: 2px;
+    }
+    
+    .ip-location {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 3px;
+    }
+    
+    .ip-info-badge {
+        margin-left: 4px;
+        font-size: 0.7rem;
+    }
+    
+    .status-safe {
+        background-color: #28a745;
+    }
+    
+    .status-warning {
+        background-color: #ffc107;
+    }
+    
+    .status-danger {
+        background-color: #dc3545;
+    }
+    
+    .status-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-right: 5px;
+    }
+    
+    .ip-tooltip {
+        position: relative;
+        display: inline-block;
+    }
+    
+   
+    .physical-only-file {
+        background-color: rgba(23, 162, 184, 0.1); 
+    }
+    
+    .hash-text {
+        font-family: monospace;
+        font-size: 0.85em;
+        word-break: break-all;
+    }
+    
+    .tab-pane {
+        padding-top: 20px;
+    }
+    
+    .nav-tabs .nav-link {
+        color: #495057;
+    }
+    
+    .nav-tabs .nav-link.active {
+        font-weight: bold;
+        color: #0d6efd;
+    }
+    
+    .border-left-blue {
+        border-left: 4px solid #0d6efd;
+    }
+    
+    .hash-text {
+        font-family: monospace;
+        word-break: break-all;
+        font-size: 0.9rem;
+        background-color: #f8f9fa;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+    
+    .byte-ascii {
+        font-family: monospace;
+        white-space: nowrap;
+        margin-bottom: 2px;
+        display: flex;
+    }
+    
+    .byte-offset {
+        color: #6c757d;
+        margin-right: 10px;
+        min-width: 80px;
+        display: inline-block;
+    }
+    
+    .byte-hex {
+        color: #0d6efd;
+        margin-right: 20px;
+        min-width: 350px;
+        display: inline-block;
+    }
+    
+    .byte-text {
+        color: #28a745;
+        display: inline-block;
+    }
+    
+    .code-http {
+        background-color: #fff3cd;
+        border-color: #ffecb5;
+        color: #856404;
+    }
+    
+    #ssh-logins-filter {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    
+    #ssh-logins-filter-clear {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+    
+    .chart-container {
+        position: relative;
+        width: 100%;
+        min-height: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+    }
+    
+    .chart-img {
+        width: 100%;
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+        object-fit: contain;
+        border: 1px solid #eaeaea;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        background-color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Información del Honeypot SSH/Telnet</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-0">Esta sección muestra los ataques capturados en los servicios SSH y Telnet honeypot. Los datos son completamente independientes de la honeypot web.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="fas fa-key me-2"></i>Intentos de Acceso SSH/Telnet</h5>
+                <div>
+                    <div class="input-group input-group-sm me-2" style="width: 300px; display: inline-flex;">
+                        <input type="text" id="ssh-logins-filter" class="form-control" placeholder="Filtrar por usuario, contraseña o IP...">
+                        <div class="input-group-append">
+                            <button id="ssh-logins-filter-clear" class="btn btn-outline-secondary" type="button">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button id="refresh-logins" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-sync-alt me-1"></i> Actualizar
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="ssh-logins-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando datos de accesos...</p>
+                </div>
+                <div id="ssh-logins-error" class="alert alert-danger d-none">
+                    Error al cargar datos. <span id="ssh-logins-error-message"></span>
+                </div>
+                <div id="ssh-logins-empty" class="alert alert-warning d-none">
+                    No se han detectado intentos de acceso hasta el momento.
+                </div>
+                <div id="ssh-logins-container" class="table-responsive d-none">
+                    <table id="ssh-logins-table" class="table table-striped table-bordered">
+                        <thead>
+                            <tr class="table-header-ssh">
+                                <th>Timestamp</th>
+                                <th>Usuario</th>
+                                <th>Contraseña</th>
+                                <th>IP / Origen</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ssh-logins-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="fas fa-terminal me-2"></i>Comandos SSH/Telnet Ejecutados</h5>
+                <button id="refresh-commands" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-sync-alt me-1"></i> Actualizar
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="ssh-commands-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando comandos ejecutados...</p>
+                </div>
+                <div id="ssh-commands-error" class="alert alert-danger d-none">
+                    Error al cargar datos. <span id="ssh-commands-error-message"></span>
+                </div>
+                <div id="ssh-commands-empty" class="alert alert-warning d-none">
+                    No se han ejecutado comandos en el honeypot.
+                </div>
+                <div id="ssh-commands-container" class="table-responsive d-none">
+                    <table id="ssh-commands-table" class="table table-striped table-bordered">
+                        <thead>
+                            <tr class="table-header-ssh">
+                                <th>Timestamp</th>
+                                <th>IP / Origen</th>
+                                <th>Comando</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ssh-commands-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="fas fa-chart-bar me-2"></i>Comandos más utilizados</h5>
+                <button id="refresh-top-commands" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-sync-alt me-1"></i> Actualizar
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="top-commands-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando comandos más utilizados...</p>
+                </div>
+                <div id="top-commands-error" class="alert alert-danger d-none">
+                    Error al cargar datos. <span id="top-commands-error-message"></span>
+                </div>
+                <div id="top-commands-empty" class="alert alert-warning d-none">
+                    No hay datos de comandos disponibles.
+                </div>
+                <div id="top-commands-container" class="d-none">
+                    <div class="table-responsive">
+                        <table id="top-commands-table" class="table table-striped table-bordered">
+                            <thead>
+                                <tr class="table-header-ssh">
+                                    <th>Comando</th>
+                                    <th>Veces ejecutado</th>
+                                    <th>Primera ejecución</th>
+                                    <th>Última ejecución</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-commands-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="pagination-info">
+                            Mostrando <span id="top-commands-showing">0</span> de <span id="top-commands-total">0</span> comandos
+                        </div>
+                        <nav aria-label="Navegación de comandos">
+                            <ul class="pagination" id="top-commands-pagination">
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center bg-danger text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-virus me-2"></i>Malware Capturado</h5>
+                <button id="refresh-malware" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-sync-alt me-1"></i> Actualizar
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="ssh-malware-loading" class="text-center py-5">
+                    <div class="spinner-border text-danger mb-3" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando datos de malware...</p>
+                </div>
+                <div id="ssh-malware-error" class="alert alert-danger d-none">
+                    Error al cargar datos. <span id="ssh-malware-error-message"></span>
+                </div>
+                <div id="ssh-malware-empty" class="alert alert-warning d-none">
+                    No se ha capturado malware en el honeypot SSH.
+                </div>
+                <div id="ssh-malware-container" class="table-responsive d-none">
+                    <table id="ssh-malware-table" class="table table-striped table-bordered">
+                        <thead>
+                            <tr class="table-header-ssh">
+                                <th>Timestamp</th>
+                                <th>Hash del archivo</th>
+                                <th>Tamaño</th>
+                                <th>Tipo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ssh-malware-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="fas fa-user-secret me-2"></i>Top IPs Atacantes</h5>
+                <button id="refresh-top-ips" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-sync-alt me-1"></i> Actualizar
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="ssh-top-ips-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando datos de IPs...</p>
+                </div>
+                <div id="ssh-top-ips-error" class="alert alert-danger d-none">
+                    Error al cargar datos. <span id="ssh-top-ips-error-message"></span>
+                </div>
+                <div id="ssh-top-ips-empty" class="alert alert-warning d-none">
+                    No hay información de IPs disponible.
+                </div>
+                <div id="ssh-top-ips-container" class="table-responsive d-none">
+                    <table id="ssh-top-ips-table" class="table table-striped table-bordered">
+                        <thead>
+                            <tr class="table-header-ssh">
+                                <th>IP</th>
+                                <th>País / Ciudad</th>
+                                <th>Organización</th>
+                                <th>Actividad Total</th>
+                                <th>Intentos de Login</th>
+                                <th>Comandos</th>
+                                <th>Malware</th>
+                                <th>Última Actividad</th>
+                                <th>Reputación</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ssh-top-ips-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="fas fa-key me-2"></i>Credenciales Utilizadas</h5>
+                <button id="refresh-credentials" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-sync-alt me-1"></i> Actualizar
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="ssh-credentials-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando datos de credenciales...</p>
+                </div>
+                <div id="ssh-credentials-error" class="alert alert-danger d-none">
+                    Error al cargar datos. <span id="ssh-credentials-error-message"></span>
+                </div>
+                <div id="ssh-credentials-empty" class="alert alert-warning d-none">
+                    No hay información de credenciales disponible.
+                </div>
+                <div id="ssh-credentials-container" class="d-none">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card border-primary mb-3">
+                                <div class="card-header bg-primary text-white">
+                                    <i class="fas fa-user me-2"></i>Usuarios Más Utilizados
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table id="ssh-usernames-table" class="table table-hover m-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Usuario</th>
+                                                    <th>Intentos</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="ssh-username-table-body">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-danger mb-3">
+                                <div class="card-header bg-danger text-white">
+                                    <i class="fas fa-key me-2"></i>Contraseñas Más Utilizadas
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table id="ssh-passwords-table" class="table table-hover m-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Contraseña</th>
+                                                    <th>Intentos</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="ssh-password-table-body">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-primary bg-gradient text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-globe me-2"></i> Distribución Geográfica de Ataques</h5>
+            </div>
+            <div class="card-body">
+                <div class="geo-distribution-header">
+                    <i class="fas fa-info-circle me-2"></i> Esta sección muestra la distribución geográfica de las IPs desde donde se han intentado conexiones al sistema. Cada intento de conexión se cuenta como un ataque individual, no solo IPs únicas.
+                </div>
+                
+                <div id="ssh-countries-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando datos de países...</p>
+                </div>
+                
+                <div id="ssh-countries-error" class="alert alert-danger d-none">
+                    Error al cargar datos. <span id="ssh-countries-error-message"></span>
+                </div>
+                
+                <div id="ssh-countries-empty" class="alert alert-warning d-none">
+                    No hay información de países disponible.
+                </div>
+                
+                <div id="ssh-countries-container" class="table-responsive d-none">
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="fw-bold"><i class="fas fa-flag me-2"></i>Países de Origen de Ataques</h6>
+                                <div>
+                                    <span id="total-countries-badge" class="badge bg-primary me-2">0 países</span>
+                                    <span id="total-attacks-badge" class="badge bg-danger">0 ataques totales</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <table id="ssh-countries-table" class="table table-hover table-striped">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>País</th>
+                                <th>Ataques</th>
+                                <th>Porcentaje</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ssh-countries-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h3 class="mb-3">Actividad Reciente</h3>
+    </div>
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Eventos por Hora (SSH/Telnet)</h6>
+            </div>
+            <div class="card-body">
+                <p>Este gráfico muestra la distribución de eventos SSH/Telnet por hora, permitiendo identificar patrones de actividad durante el día.</p>
+                <div class="chart-container">
+                    <div id="ssh-hourly-chart-loading" class="text-center py-5">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2">Cargando datos...</p>
+                    </div>
+                    <div id="ssh-hourly-chart-empty" class="text-center py-5 d-none">
+                        <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+                        <p>No hay suficientes datos para mostrar el gráfico.</p>
+                        <p class="small text-muted">Los datos aparecerán cuando se registren eventos.</p>
+                    </div>
+                    <img id="ssh-hourly-chart" class="chart-img d-none" alt="Gráfico de eventos por hora" />
+                </div>
+                <div class="mt-3">
+                    <h6>Análisis de actividad por hora:</h6>
+                    <ul>
+                        <li>Las horas pico pueden indicar actividad de bots programados.</li>
+                        <li>Patrones consistentes en horarios específicos sugieren ataques automatizados.</li>
+                        <li>Picos repentinos pueden representar un ataque coordinado o un escaneo masivo.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Eventos por Día (SSH/Telnet)</h6>
+            </div>
+            <div class="card-body">
+                <p>Este gráfico muestra la distribución de eventos SSH/Telnet por día, permitiendo identificar tendencias a lo largo del tiempo.</p>
+                <div class="chart-container">
+                    <div id="ssh-daily-chart-loading" class="text-center py-5">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2">Cargando datos...</p>
+                    </div>
+                    <div id="ssh-daily-chart-empty" class="text-center py-5 d-none">
+                        <i class="fas fa-chart-bar fa-4x text-muted mb-3"></i>
+                        <p>No hay suficientes datos para mostrar el gráfico.</p>
+                        <p class="small text-muted">Los datos aparecerán cuando se registren eventos durante varios días.</p>
+                    </div>
+                    <img id="ssh-daily-chart" class="chart-img d-none" alt="Gráfico de eventos por día" />
+                </div>
+                <div class="mt-3">
+                    <h6>Análisis de actividad por día:</h6>
+                    <ul>
+                        <li>Los fines de semana suelen mostrar patrones diferentes a los días laborables.</li>
+                        <li>Incrementos progresivos pueden indicar que el honeypot ha sido incluido en más listas de objetivos.</li>
+                        <li>Caídas abruptas podrían significar que los atacantes han dejado de considerar el sistema como un objetivo valioso.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">Detalles</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="detailsModalBody">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="malwareModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Visor de Malware</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <h6 id="malwareName" class="fw-bold"></h6>
+                    <div id="malwareInfo" class="small text-muted"></div>
+                    <div class="mt-2" id="malwareDownloadContainer">
+                        <a id="malwareDownloadLink" href="#" class="btn btn-sm btn-danger" target="_blank">
+                            <i class="fas fa-download me-1"></i> Descargar Archivo
+                        </a>
+                        <div class="mt-1 small text-danger">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            <strong>ADVERTENCIA:</strong> Este archivo puede ser malicioso. Descárguelo bajo su propio riesgo.
+                        </div>
+                    </div>
+                </div>
+                <div class="nav nav-tabs" id="malwareTab" role="tablist">
+                    <button class="nav-link active" id="hex-tab" data-bs-toggle="tab" data-bs-target="#hex-content" type="button" role="tab">Hexadecimal</button>
+                    <button class="nav-link" id="strings-tab" data-bs-toggle="tab" data-bs-target="#strings-content" type="button" role="tab">Strings</button>
+                </div>
+                <div class="tab-content mt-3">
+                    <div class="tab-pane fade show active" id="hex-content" role="tabpanel">
+                        <div class="hex-viewer">
+                            <pre id="malwareHexContent"></pre>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="strings-content" role="tabpanel">
+                        <div class="hex-viewer">
+                            <pre id="malwareStringsContent"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/jvectormap@2.0.4/jquery-jvectormap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jvectormap@2.0.4/jquery-jvectormap-world-mill.min.js"></script>
+<script>
+
+function formatIpAddress(ip, countryCode, country, city, isMalicious, isVpn) {
+    let code = '';
+    if (countryCode) {
+        code = countryCode.toLowerCase();
+    } else if (country && country.length >= 2) {
+        code = country.slice(0,2).toLowerCase();
+    }
+    const flagImg = code
+        ? `<img src="https://flagcdn.com/16x12/${code}.png"
+                class="ip-flag"
+                alt="${country}"
+                title="${country}">`
+        : '';
+
+    const statusClass = isMalicious
+        ? 'status-danger'
+        : isVpn
+            ? 'status-warning'
+            : 'status-safe';
+    const statusTitle = isMalicious
+        ? 'IP Maliciosa'
+        : isVpn
+            ? 'VPN/Proxy'
+            : 'IP Normal';
+
+    let badges = '';
+    if (isMalicious) badges += '<span class="badge bg-danger ip-info-badge">Maliciosa</span>';
+    if (isVpn)        badges += '<span class="badge bg-warning text-dark ip-info-badge">VPN</span>';
+
+    let cityText = city;
+    if (typeof city === 'boolean') {
+        cityText = ''; 
+    }
+
+    
+    const locationText = cityText && country
+        ? `${cityText}, ${country}`
+        : (cityText || country || 'Ubicación desconocida');
+
+    
+    return `
+        <div class="ip-tooltip">
+          <span class="ip-container">
+            <span class="status-indicator ${statusClass}" title="${statusTitle}"></span>
+            ${ip || 'Desconocida'}
+            ${flagImg}
+            ${badges}
+          </span>
+          <div class="ip-location">${locationText}</div>
+        </div>
+    `;
+}
+
+let selectedProtocol = 'all';
+
+const FIXED_MAX_VALUES = {
+    'login-attempts-count': 71, 
+    'commands-count': 0,        
+    'countries-count': 12,      
+    'malware-count': 0         
+};
+
+
+function loadTopCommands(page = 1, perPage = 10) {
+    console.log('Cargando comandos más utilizados...');
+    
+    
+    showLoading('top-commands');
+    
+    
+    fetch(`/api/top_commands?page=${page}&per_page=${perPage}`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Datos de comandos más utilizados recibidos:', data);
+            
+            if (!data.commands || data.commands.length === 0) {
+                showEmpty('top-commands');
+                return;
+            }
+            
+            
+            const tableBody = document.getElementById('top-commands-table-body');
+            tableBody.innerHTML = '';
+            
+            data.commands.forEach(command => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><code>${escapeHtml(command.command)}</code></td>
+                    <td><span class="badge bg-primary">${command.count}</span></td>
+                    <td>${formatTimestamp(command.first_used)}</td>
+                    <td>${formatTimestamp(command.last_used)}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            
+            document.getElementById('top-commands-showing').textContent = data.commands.length;
+            document.getElementById('top-commands-total').textContent = data.total;
+            
+            generatePagination('top-commands-pagination', page, data.total_pages, (newPage) => {
+                loadTopCommands(newPage, perPage);
+            });
+            
+            showContent('top-commands');
+        })
+        .catch(error => {
+            console.error('Error al cargar comandos más utilizados:', error);
+            showError('top-commands', error.toString());
+        });
+}
+
+
+function generatePagination(containerId, currentPage, totalPages, callback) {
+    const paginationContainer = document.getElementById(containerId);
+    paginationContainer.innerHTML = '';
+    
+    if (totalPages <= 1) {
+        return;
+    }
+    
+    
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    const prevLink = document.createElement('a');
+    prevLink.className = 'page-link';
+    prevLink.href = '#';
+    prevLink.setAttribute('aria-label', 'Anterior');
+    prevLink.innerHTML = '<span aria-hidden="true">&laquo;</span>';
+    prevLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (currentPage > 1) {
+            callback(currentPage - 1);
+        }
+    });
+    prevLi.appendChild(prevLink);
+    paginationContainer.appendChild(prevLi);
+    
+    
+    let startPage = Math.max(1, currentPage - 2);
+    let endPage = Math.min(totalPages, startPage + 4);
+    
+    if (endPage - startPage < 4) {
+        startPage = Math.max(1, endPage - 4);
+    }
+    
+   
+    for (let i = startPage; i <= endPage; i++) {
+        const pageLi = document.createElement('li');
+        pageLi.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        const pageLink = document.createElement('a');
+        pageLink.className = 'page-link';
+        pageLink.href = '#';
+        pageLink.textContent = i;
+        pageLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            callback(i);
+        });
+        pageLi.appendChild(pageLink);
+        paginationContainer.appendChild(pageLi);
+    }
+    
+   
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    const nextLink = document.createElement('a');
+    nextLink.className = 'page-link';
+    nextLink.href = '#';
+    nextLink.setAttribute('aria-label', 'Siguiente');
+    nextLink.innerHTML = '<span aria-hidden="true">&raquo;</span>';
+    nextLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (currentPage < totalPages) {
+            callback(currentPage + 1);
+        }
+    });
+    nextLi.appendChild(nextLink);
+    paginationContainer.appendChild(nextLi);
+}
+
+
+function escapeHtml(unsafe) {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadSSHLogins();
+    loadSSHCommands();
+    loadSSHMalware();
+    loadTopIPs();
+    loadCredentials();
+    loadCountries();
+    loadSSHActivityCharts();
+    loadTopCommands();  
+    
+    
+    const configureButton = (id, callback) => {
+        const button = document.getElementById(id);
+        if (button) {
+            button.addEventListener('click', callback);
+        } else {
+            console.warn(`Botón con ID '${id}' no encontrado`);
+        }
+    };
+    
+   
+    configureButton('refresh-logins', loadSSHLogins);
+    configureButton('refresh-commands', loadSSHCommands);
+    configureButton('refresh-malware', loadSSHMalware);
+    configureButton('refresh-top-ips', loadTopIPs);
+    configureButton('refresh-credentials', loadCredentials);
+    configureButton('refresh-countries', loadCountries);
+    configureButton('refresh-top-commands', loadTopCommands);   
+});
+
+
+function initializeCountersWithMaxValues() {
+    console.log("Inicializando contadores con valores máximos guardados");
+    
+    
+    const counterIds = [
+        'login-attempts-count', 
+        'commands-count', 
+        'countries-count', 
+        'malware-count'
+    ];
+    
+    
+    counterIds.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            
+            const maxValue = counterMaxValues.get(id);
+            console.log(`Recuperando valor máximo para ${id}: ${maxValue}`);
+            
+            if (maxValue > 0) {
+                element.textContent = maxValue;
+            }
+        }
+    });
+}
+
+
+function initSSHDashboard() {
+    console.log('Iniciando actualización del dashboard SSH/Telnet');
+    
+    
+    return Promise.all([
+        new Promise(resolve => {
+        loadSSHLogins();
+            resolve();
+        }),
+        new Promise(resolve => {
+        loadSSHCommands();
+            resolve();
+        }),
+        new Promise(resolve => {
+        loadSSHMalware();
+            resolve();
+        }),
+        new Promise(resolve => {
+        loadTopIPs();
+            resolve();
+        }),
+        new Promise(resolve => {
+        loadStatistics();
+            resolve();
+        }),
+        new Promise(resolve => {
+        loadCredentials();
+            resolve();
+        }),
+        new Promise(resolve => {
+        loadCountries();
+            resolve();
+        }),
+        new Promise(resolve => {
+            loadSSHActivityCharts();
+            resolve();
+        })
+    ]);
+    }
+    
+    function loadStatistics() {
+        console.log('Solicitando estadísticas secundarias de SSH/Telnet...');
+        fetch('/api/ssh_statistics')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al cargar estadísticas: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Estadísticas recibidas (solo para datos secundarios):', data);
+                
+               
+                document.getElementById('ssh-login-attempts').textContent = 'SSH: ' + (data.ssh_login_attempts || '0');
+                document.getElementById('telnet-login-attempts').textContent = 'Telnet: ' + (data.telnet_login_attempts || '0');
+                document.getElementById('ssh-commands').textContent = 'SSH: ' + (data.ssh_commands || '0');
+                document.getElementById('telnet-commands').textContent = 'Telnet: ' + (data.telnet_commands || '0');
+                
+                if (data.ssh_malware !== undefined && data.telnet_malware !== undefined) {
+                    document.getElementById('ssh-malware').textContent = 'SSH: ' + (data.ssh_malware || '0');
+                    document.getElementById('telnet-malware').textContent = 'Telnet: ' + (data.telnet_malware || '0');
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar estadísticas:', error);
+            });
+    }
+    
+    function updateCounterWithMax(id, newValue) {
+        const element = document.getElementById(id);
+        if (!element) return;
+        
+        newValue = parseInt(newValue) || 0;
+        
+        const currentDisplayed = parseInt(element.textContent) || 0;
+        
+        const maxValue = Math.max(
+            newValue,
+            currentDisplayed,
+            counterMaxValues.get(id)
+        );
+        
+        counterMaxValues.update(id, maxValue);
+        
+        element.textContent = maxValue;
+        
+        console.log(`Contador ${id}: API=${newValue}, mostrado=${currentDisplayed}, máximo=${maxValue}`);
+    }
+    
+    function loadSSHLogins() {
+        showLoading('ssh-logins');
+        
+        fetch('/api/honeypot_data?type=logins')
+            .then(response => response.json())
+            .then(data => {
+                if ($.fn.DataTable.isDataTable('#ssh-logins-table')) {
+                    $('#ssh-logins-table').DataTable().destroy();
+                }
+                
+                const tableBody = document.getElementById('ssh-logins-table-body');
+                tableBody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    showEmpty('ssh-logins');
+                    return;
+                }
+                
+                
+                let filteredData = selectedProtocol === 'all' ? 
+                    data : 
+                    data.filter(login => login.protocol === selectedProtocol);
+                
+                
+                const httpPattern = /GET|POST|HTTP|User-Agent|Mozilla|HEAD|zgrab|Host:|Connection:|Accept:|Accept-Encoding: gzip|Content-/i;
+                filteredData = filteredData.filter(login => {
+                    return !(
+                        (login.username && httpPattern.test(login.username)) || 
+                        (login.password && httpPattern.test(login.password))
+                    );
+                });
+                    
+                if (filteredData.length === 0) {
+                    showEmpty('ssh-logins');
+                    return;
+                }
+                
+               
+                const groupedLogins = {};
+                
+                
+                filteredData.forEach(login => {
+                    
+                    const loginId = `${login.timestamp}_${login.username}_${login.password}_${login.ip}_${login.protocol}`;
+                    
+                    if (groupedLogins[loginId]) {
+                        
+                        groupedLogins[loginId].count++;
+                    } else {
+                       
+                        login.count = 1;
+                        groupedLogins[loginId] = login;
+                    }
+                });
+                
+                const groupedLoginsArray = Object.values(groupedLogins);
+                
+                groupedLoginsArray.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                groupedLoginsArray.forEach(login => {
+                    const row = document.createElement('tr');
+                    
+                    if ((login.username && /GET|POST|HTTP|User-Agent|Mozilla|HEAD|zgrab|Host:|Connection:|Accept:|Accept-Encoding: gzip|Content-/.test(login.username)) ||
+                        (login.password && /GET|POST|HTTP|User-Agent|Mozilla|HEAD|zgrab|Host:|Connection:|Accept:|Accept-Encoding: gzip|Content-/.test(login.password))) {
+                        row.className = 'table-warning';
+                    }
+                    
+                    const ipCell = formatIpAddress(
+                        login.ip, 
+                        login.country_code,
+                        login.country, 
+                        login.city, 
+                        Boolean(login.is_malicious), 
+                        Boolean(login.is_vpn)
+                    );
+                    
+                    const protocolBadge = login.protocol === 'ssh' ? 
+                        '<span class="protocol-badge-ssh">SSH</span>' : 
+                        '<span class="protocol-badge-telnet">TELNET</span>';
+                    
+                    const resultBadge = login.success ? 
+                        '<span class="badge bg-success">Conexión Exitosa</span>' : 
+                        '<span class="badge bg-danger">Conexión Fallida</span>';
+                    
+                    let reputationBadge = '';
+                    if (login.is_vpn) {
+                        reputationBadge += '<span class="badge bg-warning ms-2" title="VPN/Proxy"><i class="fas fa-mask"></i></span>';
+                    }
+                    
+                    
+                    const countLabel = login.count > 1 ? 
+                        `<span class="badge bg-info ms-2" title="Número de intentos">x${login.count}</span>` : 
+                        '';
+                    
+                    const formattedUsername = formatCredentialWithHighlight(login.username || 'N/A');
+                    const formattedPassword = formatCredentialWithHighlight(login.password || 'N/A');
+                    
+                    row.innerHTML = `
+                        <td>${formatTimestamp(login.timestamp)}</td>
+                        <td>${formattedUsername}</td>
+                        <td>${formattedPassword}</td>
+                        <td>${ipCell}</td>
+                        <td>${protocolBadge} ${resultBadge} ${reputationBadge} ${countLabel}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                $('#ssh-logins-table').DataTable({
+                    language: {
+                        url: "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"
+                    },
+                    order: [[0, 'desc']],  
+                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+                    pageLength: 10,
+                    columnDefs: [
+                        {
+                            targets: 0,
+                            render: function(data, type, row) {
+                                if (type === 'sort') {
+                                    return new Date(data).getTime();
+                                }
+                                return data;
+                            }
+                        }
+                    ],
+                    initComplete: function() {
+                        const api = this.api();
+                        
+                        $('#ssh-logins-filter').on('keyup', function() {
+                            let searchTerm = $(this).val();
+                            api.search(searchTerm).draw();
+                            
+                            if (searchTerm && (/GET|POST|HTTP|User-Agent|Mozilla|HEAD|zgrab|Host:|Connection:|Accept:|Accept-Encoding: gzip|Content-/).test(searchTerm)) {
+                                api.rows().every(function() {
+                                    const data = this.data();
+                                    const httpPattern = /GET|POST|HTTP|User-Agent|Mozilla|HEAD|zgrab|Host:|Connection:|Accept:|Accept-Encoding: gzip|Content-/;
+                                    
+                                    if ((data[1] && httpPattern.test(data[1])) || 
+                                        (data[2] && httpPattern.test(data[2]))) {
+                                        $(this.node()).addClass('table-warning');
+                                    } else {
+                                        $(this.node()).removeClass('table-warning');
+                                    }
+                                });
+                            }
+                        });
+                        
+                        
+                        $('#ssh-logins-filter-clear').on('click', function() {
+                            $('#ssh-logins-filter').val('').trigger('keyup');
+                        });
+                    }
+                });
+                
+                showContent('ssh-logins');
+            })
+            .catch(error => {
+                console.error('Error cargando datos de login:', error);
+                showError('ssh-logins', error.toString());
+            });
+    }
+    
+    function loadSSHCommands() {
+        showLoading('ssh-commands');
+        
+        fetch('/api/honeypot_data?type=commands')
+            .then(response => response.json())
+            .then(data => {
+                if ($.fn.DataTable.isDataTable('#ssh-commands-table')) {
+                    $('#ssh-commands-table').DataTable().destroy();
+                }
+                
+                const tableBody = document.getElementById('ssh-commands-table-body');
+                tableBody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    showEmpty('ssh-commands');
+                    return;
+                }
+                
+                let filteredData = selectedProtocol === 'all' ? 
+                    data : 
+                    data.filter(command => command.protocol === selectedProtocol);
+                
+                const httpPattern = /GET|POST|HTTP|User-Agent|Mozilla|HEAD|zgrab|Host:|Connection:|Accept:|Accept-Encoding: gzip|Content-/i;
+                filteredData = filteredData.filter(command => {
+                    return !httpPattern.test(command.command || '');
+                });
+                    
+                if (filteredData.length === 0) {
+                    showEmpty('ssh-commands');
+                    return;
+                }
+                
+            const groupedCommands = {};
+            
+                filteredData.forEach(command => {
+                const key = `${command.ip || 'unknown'}_${command.protocol}_${command.command || 'desconocido'}`;
+                
+                if (!groupedCommands[key]) {
+                    groupedCommands[key] = {
+                        ...command,
+                        count: 1,
+                        originalTimestamp: command.timestamp
+                    };
+                } else {
+                    
+                    groupedCommands[key].count++;
+                    
+                    if (new Date(command.timestamp) > new Date(groupedCommands[key].originalTimestamp)) {
+                        groupedCommands[key].timestamp = command.timestamp;
+                        groupedCommands[key].originalTimestamp = command.timestamp;
+                    }
+                }
+            });
+            
+            const groupedArray = Object.values(groupedCommands);
+            
+            groupedArray.sort((a, b) => new Date(b.originalTimestamp) - new Date(a.originalTimestamp));
+            
+            groupedArray.forEach(command => {
+                    const row = document.createElement('tr');
+                
+                const ipCell = formatIpAddress(
+                    command.ip, 
+                    command.country_code,
+                    command.country, 
+                    command.city, 
+                    Boolean(command.is_malicious), 
+                    Boolean(command.is_vpn)
+                );
+                
+                const protocolBadge = command.protocol === 'ssh' ? 
+                    '<span class="protocol-badge-ssh">SSH</span>' : 
+                    '<span class="protocol-badge-telnet">TELNET</span>';
+                
+                const countLabel = command.count > 1 ? 
+                    `<span class="badge bg-info ms-2" title="Número de repeticiones">x${command.count}</span>` : 
+                    '';
+                
+                    row.innerHTML = `
+                        <td>${formatTimestamp(command.timestamp)}</td>
+                        <td>${ipCell}</td>
+                        <td><code>${command.command || 'N/A'}</code> ${protocolBadge} ${countLabel}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                $('#ssh-commands-table').DataTable({
+                    language: {
+                        url: "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"
+                    },
+                order: [[0, 'desc']],  
+                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+                    pageLength: 10
+                });
+                
+                showContent('ssh-commands');
+            })
+            .catch(error => {
+                console.error('Error cargando comandos:', error);
+                showError('ssh-commands', error.toString());
+            });
+    }
+    
+    function loadSSHMalware() {
+        showLoading('ssh-malware');
+        
+        fetch('/api/combined_malware')
+            .then(response => response.json())
+            .then(data => {
+                if ($.fn.DataTable.isDataTable('#ssh-malware-table')) {
+                    $('#ssh-malware-table').DataTable().destroy();
+                }
+                
+                const tableBody = document.getElementById('ssh-malware-table-body');
+                tableBody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    showEmpty('ssh-malware');
+                    return;
+                }
+                
+                const filteredData = selectedProtocol === 'all' ? 
+                    data : 
+                    data.filter(malware => malware.protocol === selectedProtocol);
+                    
+                if (filteredData.length === 0) {
+                    showEmpty('ssh-malware');
+                    return;
+                }
+                
+                filteredData.forEach(malware => {
+                    const row = document.createElement('tr');
+                    
+                    const hash = malware.file_hash || malware.shasum || 'N/A';
+                    
+                    const filename = `${hash}.bin`;
+                    
+                    const filesize = malware.filesize || malware.file_size_bytes || malware.size || 0;
+                    
+                    const isPhysicalOnly = malware.physical_only === true;
+                    
+                    const rowClass = isPhysicalOnly ? 'physical-only-file' : '';
+                    
+                    row.className = rowClass;
+                    row.innerHTML = `
+                        <td>${formatTimestamp(malware.timestamp)}</td>
+                        <td><span class="hash-text">${hash}</span></td>
+                        <td>${formatFileSize(filesize)}</td>
+                        <td>${malware.filetype || 'Binario'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-info" onclick="showMalwareDetails('${malware._id}', '${malware.protocol}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                $('#ssh-malware-table').DataTable({
+                    language: {
+                        url: "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"
+                    },
+                    order: [[0, 'desc']],
+                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+                    pageLength: 10
+                });
+                
+                showContent('ssh-malware');
+            })
+            .catch(error => {
+                console.error('Error cargando malware:', error);
+                showError('ssh-malware', error.toString());
+            });
+    }
+    
+    function loadTopIPs() {
+        showLoading('ssh-top-ips');
+        
+        fetch('/api/ssh_top_ips')
+            .then(response => response.json())
+            .then(data => {
+            if ($.fn.DataTable.isDataTable('#ssh-top-ips-table')) {
+                $('#ssh-top-ips-table').DataTable().destroy();
+                }
+                
+                const tableBody = document.getElementById('ssh-top-ips-table-body');
+                tableBody.innerHTML = '';
+                
+            if (data.length === 0) {
+                showEmpty('ssh-top-ips');
+                return;
+            }
+            
+            const filteredData = data;
+            
+            filteredData.forEach(ip => {
+                    const row = document.createElement('tr');
+                    
+                const totalLogins = ip.ssh_login_count + ip.telnet_login_count;
+                const totalCommands = ip.ssh_command_count + ip.telnet_command_count;
+                const totalMalware = ip.malware_count || 0;
+                const totalActivity = totalLogins + totalCommands + totalMalware;
+                
+                const ipCell = formatIpAddress(
+                    ip.ip, 
+                    ip.country_code,
+                    ip.country, 
+                    ip.city, 
+                    Boolean(ip.is_malicious), 
+                    Boolean(ip.is_vpn)
+                );
+                
+                const locationCell = `
+                    <div>
+                        <strong>${ip.country || 'Desconocido'}</strong>
+                        ${ip.city ? '<div><small class="text-muted">' + ip.city + '</small></div>' : ''}
+                    </div>
+                `;
+                
+                const orgCell = `<div>${ip.org || 'Desconocida'}</div>`;
+                
+                const totalActivityCell = `
+                    <div class="text-center">
+                        <strong class="text-primary">${totalActivity}</strong>
+                    </div>
+                `;
+                
+                const loginCell = `
+                    <div>
+                        Total: <strong>${totalLogins}</strong>
+                        <div class="small">
+                            <span class="protocol-badge-ssh">SSH: ${ip.ssh_login_count}</span>
+                            <span class="protocol-badge-telnet ms-1">TELNET: ${ip.telnet_login_count}</span>
+                        </div>
+                    </div>
+                `;
+                
+                const commandCell = `
+                    <div>
+                        Total: <strong>${totalCommands}</strong>
+                        <div class="small">
+                            <span class="protocol-badge-ssh">SSH: ${ip.ssh_command_count}</span>
+                            <span class="protocol-badge-telnet ms-1">TELNET: ${ip.telnet_command_count}</span>
+                        </div>
+                    </div>
+                `;
+                
+                let reputationCell = '';
+                    if (ip.is_malicious) {
+                    reputationCell += '<span class="badge bg-danger me-1" title="IP maliciosa"><i class="fas fa-skull-crossbones me-1"></i>Maliciosa</span>';
+                }
+                if (ip.is_vpn) {
+                    reputationCell += '<span class="badge bg-warning" title="VPN/Proxy"><i class="fas fa-mask me-1"></i>VPN/Proxy</span>';
+                }
+                if (!ip.is_malicious && !ip.is_vpn) {
+                    reputationCell = '<span class="badge bg-success">Limpia</span>';
+                    }
+                    
+                    row.innerHTML = `
+                    <td>${ipCell}</td>
+                    <td>${locationCell}</td>
+                    <td>${orgCell}</td>
+                    <td>${totalActivityCell}</td>
+                    <td>${loginCell}</td>
+                    <td>${commandCell}</td>
+                        <td>${ip.malware_count || 0}</td>
+                        <td>${formatTimestamp(ip.last_seen)}</td>
+                    <td>${reputationCell}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+                
+                $('#ssh-top-ips-table').DataTable({
+                    language: {
+                    url: "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"
+                },
+                order: [[3, 'desc']],  
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+                pageLength: 10,
+                columnDefs: [
+                    {
+                        targets: 3,
+                        type: 'num'
+                    },
+                    {
+                        targets: 4,
+                        render: function(data, type, row) {
+                            if (type === 'sort') {
+                                const totalStr = data.match(/Total: <strong>(\d+)<\/strong>/);
+                                return totalStr ? parseInt(totalStr[1]) : 0;
+                            }
+                            return data;
+                        }
+                    },
+                    {
+                        targets: 5,
+                        render: function(data, type, row) {
+                            if (type === 'sort') {
+                                const totalStr = data.match(/Total: <strong>(\d+)<\/strong>/);
+                                return totalStr ? parseInt(totalStr[1]) : 0;
+                            }
+                            return data;
+                        }
+                    }
+                ]
+                });
+                
+                showContent('ssh-top-ips');
+            })
+            .catch(error => {
+            console.error('Error cargando top IPs:', error);
+                showError('ssh-top-ips', error.toString());
+            });
+    }
+    
+    function loadCredentials() {
+        showLoading('ssh-credentials');
+        
+        fetch('/api/ssh_statistics')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error del servidor: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data || (!data.top_usernames && !data.top_passwords)) {
+                    showEmpty('ssh-credentials');
+                    return;
+                }
+                
+               
+                const usernameTableBody = document.getElementById('ssh-username-table-body');
+                if (!usernameTableBody) {
+                    console.error('No se encontró el elemento ssh-username-table-body');
+                    return;
+                }
+                
+                usernameTableBody.innerHTML = '';
+                
+                if (data.top_usernames && data.top_usernames.length > 0) {
+                const validUsernames = data.top_usernames.filter(item => 
+                    item.count > 0 && 
+                    item.username && 
+                    item.username.trim() !== ''
+                );
+                
+                if (validUsernames.length > 0) {
+                    validUsernames.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><code>${item.username}</code></td>
+                            <td><span class="badge bg-primary">${item.count}</span></td>
+                        `;
+                        usernameTableBody.appendChild(row);
+                    });
+                } else {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="2" class="text-center text-muted">No hay datos de usuarios disponibles</td>';
+                    usernameTableBody.appendChild(row);
+                }
+                    
+                    if ($.fn.DataTable.isDataTable('#ssh-usernames-table')) {
+                        $('#ssh-usernames-table').DataTable().destroy();
+                    }
+                    
+                    $('#ssh-usernames-table').DataTable({
+                        lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "Todas"]],
+                        pageLength: 5,
+                        language: {
+                            lengthMenu: "Mostrar _MENU_ entradas",
+                            search: "Buscar:",
+                            paginate: {
+                                first: "Primero",
+                                last: "Último",
+                                next: "Siguiente",
+                                previous: "Anterior"
+                            },
+                            info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                            infoEmpty: "Mostrando 0 a 0 de 0 entradas",
+                            emptyTable: "No hay datos disponibles",
+                            zeroRecords: "No se encontraron resultados"
+                        },
+                        order: [[1, 'desc']]
+                    });
+                } else {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="2" class="text-center text-muted">No hay datos de usuarios disponibles</td>';
+                    usernameTableBody.appendChild(row);
+                }
+                
+                const passwordTableBody = document.getElementById('ssh-password-table-body');
+                if (!passwordTableBody) {
+                    console.error('No se encontró el elemento ssh-password-table-body');
+                    return;
+                }
+                
+                passwordTableBody.innerHTML = '';
+                
+                if (data.top_passwords && data.top_passwords.length > 0) {
+                    const validPasswords = data.top_passwords.filter(item => 
+                        item.count > 0 && 
+                        item.password && 
+                        item.password.trim() !== '' &&
+                        item.password !== 'Desconocida' &&
+                        item.password !== 'desconocida' &&
+                        item.password !== 'N/A'
+                    );
+                    
+                    if (validPasswords.length > 0) {
+                        validPasswords.forEach(item => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td><code>${item.password}</code></td>
+                                <td><span class="badge bg-danger">${item.count}</span></td>
+                            `;
+                            passwordTableBody.appendChild(row);
+                        });
+                    } else {
+                        const row = document.createElement('tr');
+                        row.innerHTML = '<td colspan="2" class="text-center text-muted">No hay datos de contraseñas disponibles</td>';
+                        passwordTableBody.appendChild(row);
+                    }
+                    
+                    if ($.fn.DataTable.isDataTable('#ssh-passwords-table')) {
+                        $('#ssh-passwords-table').DataTable().destroy();
+                    }
+                    
+                    $('#ssh-passwords-table').DataTable({
+                        lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "Todas"]],
+                        pageLength: 5,
+                        language: {
+                            lengthMenu: "Mostrar _MENU_ entradas",
+                            search: "Buscar:",
+                            paginate: {
+                                first: "Primero",
+                                last: "Último",
+                                next: "Siguiente",
+                                previous: "Anterior"
+                            },
+                            info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                            infoEmpty: "Mostrando 0 a 0 de 0 entradas",
+                            emptyTable: "No hay datos disponibles",
+                            zeroRecords: "No se encontraron resultados"
+                        },
+                        order: [[1, 'desc']]
+                    });
+                } else {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="2" class="text-center text-muted">No hay datos de contraseñas disponibles</td>';
+                    passwordTableBody.appendChild(row);
+                }
+                
+                showContent('ssh-credentials');
+            })
+            .catch(error => {
+                console.error('Error al cargar credenciales SSH:', error);
+                showError('ssh-credentials', error.toString());
+            });
+    }
+    
+    function loadCountries() {
+        showLoading('ssh-countries');
+        
+        fetch('/api/ssh_statistics')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error del servidor: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const countriesData = data.countries_data;
+
+                if (!countriesData || countriesData.length === 0) {
+                    showEmpty('ssh-countries');
+                    return;
+                }
+                
+                const countriesTableBody = document.getElementById('ssh-countries-tbody');
+                if (!countriesTableBody) {
+                    console.error('No se encontró el elemento para la tabla de países');
+                    return;
+                }
+                
+                countriesTableBody.innerHTML = '';
+                
+                let totalAttacks = 0;
+                countriesData.forEach(item => {
+                    totalAttacks += item.count;
+                });
+                
+                countriesData.forEach(item => {
+                    const row = document.createElement('tr');
+                    const percentage = totalAttacks > 0 ? ((item.count / totalAttacks) * 100).toFixed(1) : 0;
+                    
+                    
+                    const code = item.country_code || item.countryCode || (item.country && item.country.length === 2 ? item.country : '');
+                    
+                    const countryWithFlag = formatCountryWithFlag(code, item.country);
+                    
+                    row.innerHTML = `
+                        <td>${countryWithFlag}</td>
+                        <td><span class="badge bg-primary">${item.count}</span></td>
+                        <td><div class="progress" style="height: 20px;">
+                              <div class="progress-bar bg-primary" role="progressbar" style="width: ${percentage}%;" 
+                                   aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">${percentage}%</div>
+                            </div>
+                        </td>
+                    `;
+                    
+                    countriesTableBody.appendChild(row);
+                });
+                
+                if ($.fn.DataTable.isDataTable('#ssh-countries-table')) {
+                    $('#ssh-countries-table').DataTable().destroy();
+                }
+                
+                $('#ssh-countries-table').DataTable({
+                    lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "Todas"]],
+                    pageLength: -1,
+                    language: {
+                        lengthMenu: "Mostrar _MENU_ entradas",
+                        search: "Buscar:",
+                        paginate: {
+                            first: "Primero",
+                            last: "Último",
+                            next: "Siguiente",
+                            previous: "Anterior"
+                        },
+                        info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                        infoEmpty: "Mostrando 0 a 0 de 0 entradas",
+                        emptyTable: "No hay datos disponibles",
+                        zeroRecords: "No se encontraron resultados"
+                    },
+                    order: [[1, 'desc']]
+                });
+                
+                document.getElementById('total-countries-badge').textContent = countriesData.length + ' países';
+            document.getElementById('total-attacks-badge').textContent = totalAttacks + ' ataques individuales';
+            
+            const attacksColumnHeader = document.querySelector('#ssh-countries-table thead th:nth-child(2)');
+            if (attacksColumnHeader) {
+                attacksColumnHeader.textContent = 'Ataques individuales';
+            }
+                
+                showContent('ssh-countries');
+            })
+            .catch(error => {
+                console.error('Error al cargar datos de países SSH:', error);
+                showError('ssh-countries', error.toString());
+            });
+    }
+    
+    function showLoginDetails(loginId, protocol) {
+        const apiUrl = protocol === 'telnet' ? `/api/telnet_login_details/${loginId}` : `/api/ssh_login_details/${loginId}`;
+        
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(login => {
+                const modal = document.getElementById('detailsModal');
+                const modalTitle = document.getElementById('detailsModalLabel');
+                const modalBody = document.getElementById('detailsModalBody');
+                
+                modalTitle.textContent = `Detalles del intento de login ${protocol.toUpperCase()}`;
+                
+                let protocolBadge = '<span class="badge protocol-badge-ssh me-2">SSH</span>';
+                if (protocol === 'telnet') {
+                    protocolBadge = '<span class="badge protocol-badge-telnet me-2">Telnet</span>';
+                }
+                
+                modalBody.innerHTML = `
+                    <div class="alert alert-${login.success ? 'success' : 'danger'} mb-3">
+                        ${protocolBadge} Intento de login ${login.success ? 'exitoso' : 'fallido'}
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6"><strong>IP de origen:</strong> ${login.src_ip}</div>
+                        <div class="col-md-6"><strong>Fecha:</strong> ${formatTimestamp(login.timestamp)}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6"><strong>Usuario:</strong> ${login.username}</div>
+                        <div class="col-md-6"><strong>Contraseña:</strong> ${login.password}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-12"><strong>País:</strong> ${login.country || 'Desconocido'}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-header">Datos completos</div>
+                                <div class="card-body">
+                                    <pre class="mb-0"><code>${JSON.stringify(login, null, 2)}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                new bootstrap.Modal(modal).show();
+            })
+            .catch(error => {
+                console.error('Error obteniendo detalles del login:', error);
+                alert('Error obteniendo detalles del login');
+            });
+    }
+    
+    function showCommandDetails(commandId, protocol) {
+        const apiUrl = protocol === 'telnet' ? `/api/telnet_command_details/${commandId}` : `/api/ssh_command_details/${commandId}`;
+        
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(command => {
+                const modal = document.getElementById('detailsModal');
+                const modalTitle = document.getElementById('detailsModalLabel');
+                const modalBody = document.getElementById('detailsModalBody');
+                
+                modalTitle.textContent = `Detalles del comando ${protocol.toUpperCase()}`;
+                
+                let protocolBadge = '<span class="badge protocol-badge-ssh me-2">SSH</span>';
+                if (protocol === 'telnet') {
+                    protocolBadge = '<span class="badge protocol-badge-telnet me-2">Telnet</span>';
+                }
+                
+                modalBody.innerHTML = `
+                    <div class="alert alert-info mb-3">
+                        ${protocolBadge} Comando ejecutado
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-md-6"><strong>IP de origen:</strong> ${command.src_ip}</div>
+                        <div class="col-md-6"><strong>Fecha:</strong> ${formatTimestamp(command.timestamp)}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-12"><strong>Comando:</strong> <code>${command.command}</code></div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-12"><strong>País:</strong> ${command.country || 'Desconocido'}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-header">Datos completos</div>
+                                <div class="card-body">
+                                    <pre class="mb-0"><code>${JSON.stringify(command, null, 2)}</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                new bootstrap.Modal(modal).show();
+            })
+            .catch(error => {
+                console.error('Error obteniendo detalles del comando:', error);
+                alert('Error obteniendo detalles del comando');
+            });
+    }
+    
+    function showMalwareDetails(malwareId, protocol) {
+        const apiUrl = protocol === 'telnet' ? `/api/telnet_malware_details/${malwareId}` : `/api/ssh_malware_details/${malwareId}`;
+        console.log('Solicitando detalles de malware desde:', apiUrl);
+        
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error en la respuesta del servidor: ${response.status} ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .then(malware => {
+                console.log('Datos de malware recibidos:', malware);
+                
+                const modal = document.getElementById('malwareModal');
+                if (!modal) {
+                    console.error('Error: No se encontró el elemento modal con ID "malwareModal"');
+                    alert('Error al mostrar detalles: No se encontró el modal');
+                    return;
+                }
+                
+                const modalTitle = document.getElementById('malwareModalLabel');
+                
+                const nameElement = document.getElementById('malwareName');
+                const infoElement = document.getElementById('malwareInfo');
+                const hexElement = document.getElementById('malwareHexContent');
+                const stringsElement = document.getElementById('malwareStringsContent');
+                
+                if (modalTitle) {
+                    modalTitle.textContent = `Detalles del malware ${protocol.toUpperCase()}`;
+                }
+                
+                if (nameElement) {
+                    const hash = malware.file_hash || malware.shasum || 'N/A';
+                    nameElement.textContent = `${hash}.bin`;
+                }
+                
+                if (infoElement) {
+                    const filesize = malware.filesize || malware.file_size_bytes || malware.size || 0;
+                    const formattedSize = formatFileSize(filesize);
+                    
+                    infoElement.innerHTML = `
+                        <div><strong>Hash:</strong> <span class="hash-text">${malware.file_hash || malware.shasum || 'N/A'}</span></div>
+                        <div><strong>Tamaño:</strong> ${formattedSize}</div>
+                        <div><strong>Tipo:</strong> ${malware.filetype || 'Binario'}</div>
+                        <div><strong>Fecha de captura:</strong> ${formatTimestamp(malware.timestamp)}</div>
+                        <div><strong>Protocolo:</strong> ${protocol.toUpperCase()}</div>
+                    `;
+                    
+                    if (malware.physical_only) {
+                        infoElement.innerHTML += `
+                            <div class="mt-2">
+                                <span class="badge bg-info">Archivo encontrado solo físicamente</span>
+                            </div>
+                        `;
+                    }
+                }
+                
+                if (hexElement) {
+                    if (malware.processing_error) {
+                        const errorMsg = malware.processing_error;
+                        
+                        if (errorMsg.includes('Permission denied')) {
+                            hexElement.innerHTML = `
+                                <div class="alert alert-warning">
+                                    <h5><i class="fas fa-lock"></i> Error de permisos</h5>
+                                    <p>No se puede acceder al archivo debido a permisos insuficientes.</p>
+                                    <p><strong>Solución</strong>: Reinicie el contenedor con el usuario correcto (999) o cambie los permisos de los archivos:</p>
+                                    <code>sudo chmod 644 /var/lib/docker/volumes/honeypot-web_cowrie_dl/_data/${malware.file_hash}</code>
+                                </div>
+                            `;
+                        } else {
+                            hexElement.innerHTML = `
+                                <div class="alert alert-danger">
+                                    <h5><i class="fas fa-exclamation-triangle"></i> Error al procesar el archivo</h5>
+                                    <p>${errorMsg}</p>
+                                </div>
+                            `;
+                        }
+                    } else if (malware.hex_view) {
+                        console.log('Usando vista hexadecimal proporcionada por el servidor');
+                        hexElement.innerHTML = malware.hex_view;
+                    } else if (malware.content || malware.data || malware.file_content) {
+                        console.log('Generando vista hexadecimal en el cliente');
+                        const content = malware.content || malware.data || malware.file_content;
+                        if (typeof content === 'string') {
+                            hexElement.innerHTML = formatHexDump(content);
+                        } else {
+                            hexElement.textContent = 'No se puede generar vista hexadecimal: formato de datos no compatible';
+                        }
+                    } else {
+                        console.log('No hay datos para mostrar vista hexadecimal');
+                        hexElement.textContent = 'Vista hexadecimal no disponible - No se recibieron datos del archivo';
+                    }
+                }
+                
+                if (stringsElement) {
+                    if (malware.processing_error && !stringsElement.innerHTML) {
+                        const errorMsg = malware.processing_error;
+                        
+                        if (errorMsg.includes('Permission denied')) {
+                            stringsElement.innerHTML = `
+                                <div class="alert alert-warning">
+                                    <h5><i class="fas fa-lock"></i> Error de permisos</h5>
+                                    <p>No se puede acceder al archivo debido a permisos insuficientes.</p>
+                                </div>
+                            `;
+                        } else {
+                            stringsElement.innerHTML = `
+                                <div class="alert alert-danger">
+                                    <h5><i class="fas fa-exclamation-triangle"></i> Error al procesar el archivo</h5>
+                                    <p>${errorMsg}</p>
+                                </div>
+                            `;
+                        }
+                    } else if (malware.strings && malware.strings.length > 0) {
+                        console.log('Usando strings proporcionados por el servidor');
+                        stringsElement.innerHTML = malware.strings.join('<br>');
+                    } else if (malware.content || malware.data || malware.file_content) {
+                        console.log('Intentando extraer strings en el cliente');
+                        const content = malware.content || malware.data || malware.file_content;
+                        if (typeof content === 'string') {
+                            const extractedStrings = extractStringsFromBinary(content);
+                            if (extractedStrings.length > 0) {
+                                stringsElement.innerHTML = extractedStrings.join('<br>');
+                            } else {
+                                stringsElement.textContent = 'No se encontraron strings en el archivo';
+                            }
+                        } else {
+                            stringsElement.textContent = 'No se pueden extraer strings: formato de datos no compatible';
+                        }
+                    } else {
+                        console.log('No hay datos para extraer strings');
+                        stringsElement.textContent = 'Strings no disponibles - No se recibieron datos del archivo';
+                    }
+                }
+                
+                const downloadLink = document.getElementById('malwareDownloadLink');
+                const downloadContainer = document.getElementById('malwareDownloadContainer');
+                if (downloadLink) {
+                    let downloadUrl = '';
+                    if (malwareId.startsWith('physical_')) {
+                        downloadUrl = `/api/ssh_malware_download/${malwareId}`;
+                    } else {
+                        downloadUrl = protocol === 'telnet' ? 
+                            `/api/telnet_malware_download/${malwareId}` : 
+                            `/api/ssh_malware_download/${malwareId}`;
+                    }
+                    
+                    downloadLink.href = downloadUrl;
+                    
+                    if (malwareId === 'placeholder' || !malware.outfile) {
+                        downloadContainer.style.display = 'none';
+                    } else {
+                        downloadContainer.style.display = 'block';
+                        
+                        const oldInfoMessages = downloadContainer.querySelectorAll('.alert-info');
+                        oldInfoMessages.forEach(element => element.remove());
+                        
+                        if (downloadContainer.querySelectorAll('.alert-info').length === 0) {
+                            const infoContainer = document.createElement('div');
+                            infoContainer.className = 'alert alert-info mt-2';
+                            infoContainer.innerHTML = `
+                                <i class="fas fa-info-circle"></i> El archivo se descargará como ZIP protegido con la contraseña: <strong>infected</strong>
+                            `;
+                            downloadContainer.appendChild(infoContainer);
+                        }
+                    }
+                }
+                
+                try {
+                    console.log('Intentando mostrar el modal');
+                    new bootstrap.Modal(modal).show();
+                } catch (error) {
+                    console.error('Error al mostrar el modal:', error);
+                    alert('Error al mostrar el modal: ' + error.message);
+                    try {
+                        $(modal).modal('show');
+                    } catch (innerError) {
+                        console.error('Error en segundo intento de mostrar modal:', innerError);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error obteniendo detalles del malware:', error);
+                alert('Error obteniendo detalles del malware: ' + error.message);
+            });
+    }
+    
+    function extractStringsFromBinary(content) {
+        const minLength = 4; 
+        const strings = [];
+        let currentString = '';
+        
+        const bytes = content.match(/.{1,2}/g) || [];
+        
+        for (let i = 0; i < bytes.length; i++) {
+            const byte = parseInt(bytes[i], 16);
+            if (byte >= 32 && byte <= 126) {
+                currentString += String.fromCharCode(byte);
+            } else {
+                if (currentString.length >= minLength) {
+                    strings.push(currentString);
+                }
+                currentString = '';
+            }
+        }
+        
+        if (currentString.length >= minLength) {
+            strings.push(currentString);
+        }
+        
+        return strings;
+    }
+    
+
+    function formatHexDump(hexString) {
+        let result = '';
+        const bytes = hexString.match(/.{1,2}/g) || [];
+        const bytesPerRow = 16;
+        
+        for (let i = 0; i < bytes.length; i += bytesPerRow) {
+            const offset = i.toString(16).padStart(8, '0');
+            const row = bytes.slice(i, i + bytesPerRow);
+            
+            const hexPart = row.join(' ').padEnd(bytesPerRow * 3, ' ');
+            
+            const asciiPart = row.map(byte => {
+                const charCode = parseInt(byte, 16);
+                return (charCode >= 32 && charCode <= 126) ? String.fromCharCode(charCode) : '.';
+            }).join('');
+            
+            result += `<div class="byte-ascii">
+                <div class="byte-offset">${offset}: </div>
+                <div class="byte-hex">${hexPart}</div>
+                <div class="byte-text">${asciiPart}</div>
+            </div>`;
+        }
+        
+        return result;
+    }
+    
+    function formatFileSize(bytes) {
+        if (!bytes || bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    function formatTimestamp(timestamp) {
+        if (!timestamp) return 'N/A';
+  
+    const fixedTimestamp = typeof timestamp === 'string' ? 
+        timestamp.replace('Z', '+00:00') : timestamp;
+    
+    try {
+        return new Date(fixedTimestamp).toLocaleString('es-ES', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    } catch (error) {
+        console.error('Error al formatear timestamp:', error, timestamp);
+        return 'Fecha inválida';
+    }
+}
+
+    function formatCountryWithFlag(countryCode, country) {
+        const code = (typeof countryCode === 'string' && countryCode) ? countryCode.toLowerCase() : '';
+        const flag = code ? 
+            `<img src="https://flagcdn.com/16x12/${code}.png" class="country-flag ip-flag" alt="${country || code || ''}" title="${country || code || ''}">` : '';
+        
+        const displayName = country || code || 'Desconocido';
+
+        return `
+            <div class="ip-with-flag">
+                ${flag}
+                <span>${displayName}</span>
+            </div>
+        `;
+    }
+    
+    function showLoading(prefix) {
+        document.getElementById(`${prefix}-loading`).classList.remove('d-none');
+        document.getElementById(`${prefix}-container`).classList.add('d-none');
+        document.getElementById(`${prefix}-error`).classList.add('d-none');
+        document.getElementById(`${prefix}-empty`).classList.add('d-none');
+    }
+    
+    function showContent(prefix) {
+        document.getElementById(`${prefix}-loading`).classList.add('d-none');
+        document.getElementById(`${prefix}-container`).classList.remove('d-none');
+        document.getElementById(`${prefix}-error`).classList.add('d-none');
+        document.getElementById(`${prefix}-empty`).classList.add('d-none');
+    }
+
+    function showEmpty(prefix) {
+        document.getElementById(`${prefix}-loading`).classList.add('d-none');
+        document.getElementById(`${prefix}-container`).classList.add('d-none');
+        document.getElementById(`${prefix}-error`).classList.add('d-none');
+        document.getElementById(`${prefix}-empty`).classList.remove('d-none');
+    }
+
+    function showError(prefix, errorMessage) {
+        document.getElementById(`${prefix}-loading`).classList.add('d-none');
+        document.getElementById(`${prefix}-container`).classList.add('d-none');
+        document.getElementById(`${prefix}-error`).classList.remove('d-none');
+        document.getElementById(`${prefix}-empty`).classList.add('d-none');
+        
+        const errorMessageElement = document.getElementById(`${prefix}-error-message`);
+        if (errorMessageElement) {
+            errorMessageElement.textContent = errorMessage;
+        }
+    }
+
+function updateSSHHourlyChart(chartData) {
+    const hourlyChart = document.getElementById('ssh-hourly-chart');
+    const hourlyChartLoading = document.getElementById('ssh-hourly-chart-loading');
+    const hourlyChartEmpty = document.getElementById('ssh-hourly-chart-empty');
+
+    if (hourlyChart && hourlyChartLoading && hourlyChartEmpty) {
+        if (chartData) {
+            hourlyChart.src = 'data:image/png;base64,' + chartData;
+            
+            hourlyChart.onload = function() {
+                console.log("Gráfico por hora cargado correctamente");
+                hourlyChart.style.display = 'block';
+            };
+            
+            hourlyChart.onerror = function(e) {
+                console.error("Error al cargar gráfico por hora", e);
+                hourlyChart.classList.add('d-none');
+                hourlyChartEmpty.classList.remove('d-none');
+            };
+            
+            hourlyChart.classList.remove('d-none');
+            hourlyChartLoading.classList.add('d-none');
+            hourlyChartEmpty.classList.add('d-none');
+        } else {
+            hourlyChart.classList.add('d-none');
+            hourlyChartLoading.classList.add('d-none');
+            hourlyChartEmpty.classList.remove('d-none');
+        }
+    }
+}
+
+function updateSSHDailyChart(chartData) {
+    const dailyChart = document.getElementById('ssh-daily-chart');
+    const dailyChartLoading = document.getElementById('ssh-daily-chart-loading');
+    const dailyChartEmpty = document.getElementById('ssh-daily-chart-empty');
+
+    if (dailyChart && dailyChartLoading && dailyChartEmpty) {
+        if (chartData) {
+            dailyChart.src = 'data:image/png;base64,' + chartData;
+            
+            dailyChart.onload = function() {
+                console.log("Gráfico por día cargado correctamente");
+                dailyChart.style.display = 'block';
+            };
+            
+            dailyChart.onerror = function(e) {
+                console.error("Error al cargar gráfico por día", e);
+                dailyChart.classList.add('d-none');
+                dailyChartEmpty.classList.remove('d-none');
+            };
+            
+            dailyChart.classList.remove('d-none');
+            dailyChartLoading.classList.add('d-none');
+            dailyChartEmpty.classList.add('d-none');
+        } else {
+            dailyChart.classList.add('d-none');
+            dailyChartLoading.classList.add('d-none');
+            dailyChartEmpty.classList.remove('d-none');
+        }
+    }
+}
+
+function loadSSHActivityCharts() {
+    console.log('Solicitando gráficos de actividad SSH/Telnet...');
+    fetch('/api/ssh_statistics')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error al cargar gráficos de actividad: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Datos de gráficos recibidos:', data.hourly_chart ? 'Hay gráfico por hora' : 'No hay gráfico por hora',
+                      data.daily_chart ? 'Hay gráfico por día' : 'No hay gráfico por día');
+            
+            if (data.hourly_chart) {
+                updateSSHHourlyChart(data.hourly_chart);
+            } else {
+                updateSSHHourlyChart(null);
+            }
+            
+            if (data.daily_chart) {
+                updateSSHDailyChart(data.daily_chart);
+            } else {
+                updateSSHDailyChart(null);
+            }
+        })
+        .catch(error => {
+            console.error('Error cargando gráficos de actividad SSH:', error);
+            updateSSHHourlyChart(null);
+            updateSSHDailyChart(null);
+        });
+}
+
+
+function formatCodeWithHighlight(text) {
+    if (!text) return '<code>N/A</code>';
+    
+    if (/GET|POST|HTTP|User-Agent|Mozilla|HEAD|zgrab|Host:|Connection:|Accept:|Accept-Encoding: gzip|Content-/.test(text)) {
+        return '<code>N/A</code>';
+    }
+    
+    const escapedText = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    
+    let className = '';
+    
+    if (/script|alert|onerror|onclick|javascript:|iframe|<img|<svg/.test(text)) {
+        className = 'code-danger';
+    }
+    
+    return `<code class="${className}">${escapedText}</code>`;
+}
+
+
+
+function loadSSHLogins() {
+    showLoading('ssh-logins');
+    
+    fetch('/api/honeypot_data?type=logins')
+        .then(response => response.json())
+        .then(data => {
+            if ($.fn.DataTable.isDataTable('#ssh-logins-table')) {
+                $('#ssh-logins-table').DataTable().destroy();
+            }
+            
+            const tableBody = document.getElementById('ssh-logins-table-body');
+            tableBody.innerHTML = '';
+            
+            if (data.length === 0) {
+                showEmpty('ssh-logins');
+                return;
+            }
+            
+            let filteredData = selectedProtocol === 'all' ? 
+                data : 
+                data.filter(login => login.protocol === selectedProtocol);
+                
+            if (filteredData.length === 0) {
+                showEmpty('ssh-logins');
+                return;
+            }
+            
+            const httpPattern = /GET|POST|HTTP|User-Agent|Mozilla|HEAD|zgrab|Host:|Connection:|Accept:|Accept-Encoding: gzip|Content-/i;
+            filteredData = filteredData.filter(login => {
+                return !(
+                    (login.username && httpPattern.test(login.username)) || 
+                    (login.password && httpPattern.test(login.password))
+                );
+            });
+                
+            if (filteredData.length === 0) {
+                showEmpty('ssh-logins');
+                return;
+            }
+            
+            const groupedLogins = {};
+            
+            filteredData.forEach(login => {
+                const loginId = `${login.timestamp}_${login.username}_${login.password}_${login.ip}_${login.protocol}`;
+                
+                if (groupedLogins[loginId]) {
+                    groupedLogins[loginId].count++;
+                } else {
+                    login.count = 1;
+                    groupedLogins[loginId] = login;
+                }
+            });
+            
+            const groupedLoginsArray = Object.values(groupedLogins);
+            
+            groupedLoginsArray.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            groupedLoginsArray.forEach(login => {
+                const row = document.createElement('tr');
+                
+                if ((login.username && /GET|POST|HTTP|User-Agent|Mozilla|HEAD|zgrab|Host:|Connection:|Accept:|Accept-Encoding: gzip|Content-/.test(login.username)) ||
+                    (login.password && /GET|POST|HTTP|User-Agent|Mozilla|HEAD|zgrab|Host:|Connection:|Accept:|Accept-Encoding: gzip|Content-/.test(login.password))) {
+                    row.className = 'table-warning';
+                }
+                
+                const ipCell = formatIpAddress(
+                    login.ip, 
+                    login.country_code,
+                    login.country, 
+                    login.city, 
+                    Boolean(login.is_malicious), 
+                    Boolean(login.is_vpn)
+                );
+                
+                const protocolBadge = login.protocol === 'ssh' ? 
+                    '<span class="protocol-badge-ssh">SSH</span>' : 
+                    '<span class="protocol-badge-telnet">TELNET</span>';
+                
+                const resultBadge = login.success ? 
+                    '<span class="badge bg-success">Conexión Exitosa</span>' : 
+                    '<span class="badge bg-danger">Conexión Fallida</span>';
+                
+                let reputationBadge = '';
+                if (login.is_vpn) {
+                    reputationBadge += '<span class="badge bg-warning ms-2" title="VPN/Proxy"><i class="fas fa-mask"></i></span>';
+                }
+                
+                const countLabel = login.count > 1 ? 
+                    `<span class="badge bg-info ms-2" title="Número de intentos">x${login.count}</span>` : 
+                    '';
+                
+                const formattedUsername = formatCredentialWithHighlight(login.username || 'N/A');
+                const formattedPassword = formatCredentialWithHighlight(login.password || 'N/A');
+                
+                row.innerHTML = `
+                    <td>${formatTimestamp(login.timestamp)}</td>
+                    <td>${formattedUsername}</td>
+                    <td>${formattedPassword}</td>
+                    <td>${ipCell}</td>
+                    <td>${protocolBadge} ${resultBadge} ${reputationBadge} ${countLabel}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            
+            $('#ssh-logins-table').DataTable({
+                language: {
+                    url: "//cdn.datatables.net/plug-ins/1.10.21/i18n/Spanish.json"
+                },
+                order: [[0, 'desc']],  
+                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "Todos"]],
+                pageLength: 10,
+                columnDefs: [
+                    {
+                        targets: 0,
+                        render: function(data, type, row) {
+                            if (type === 'sort') {
+                                return new Date(data).getTime();
+                            }
+                            return data;
+                        }
+                    }
+                ],
+                initComplete: function() {
+                    const api = this.api();
+                    
+                    $('#ssh-logins-filter').on('keyup', function() {
+                        let searchTerm = $(this).val();
+                        api.search(searchTerm).draw();
+                        
+                        if (searchTerm && (/GET|POST|HTTP|User-Agent|Mozilla|HEAD|zgrab|Host:|Connection:|Accept:|Accept-Encoding: gzip|Content-/).test(searchTerm)) {
+                            api.rows().every(function() {
+                                const data = this.data();
+                                const httpPattern = /GET|POST|HTTP|User-Agent|Mozilla|HEAD|zgrab|Host:|Connection:|Accept:|Accept-Encoding: gzip|Content-/;
+                                
+                                if ((data[1] && httpPattern.test(data[1])) || 
+                                    (data[2] && httpPattern.test(data[2]))) {
+                                    $(this.node()).addClass('table-warning');
+                                } else {
+                                    $(this.node()).removeClass('table-warning');
+                                }
+                            });
+                        }
+                    });
+                    
+                    $('#ssh-logins-filter-clear').on('click', function() {
+                        $('#ssh-logins-filter').val('').trigger('keyup');
+                    });
+                }
+            });
+            
+            showContent('ssh-logins');
+        })
+        .catch(error => {
+            console.error('Error cargando datos de login:', error);
+            showError('ssh-logins', error.toString());
+        });
+}
+
+
+function formatCredentialWithHighlight(text) {
+    if (!text) return '<code>N/A</code>';
+    
+    if (/GET|POST|HTTP|User-Agent|Mozilla|HEAD|zgrab|Host:|Connection:|Accept:|Accept-Encoding: gzip|Content-/.test(text)) {
+        return '<code>N/A</code>';
+    }
+    
+    const escapedText = escapeHtml(text);
+    let className = '';
+    
+    if (/script|alert|onerror|onclick|javascript:|iframe|<img|<svg/.test(text)) {
+        className = 'code-danger';
+    }
+    
+    return `<code class="${className}">${escapedText}</code>`;
+}
+
+var style = document.createElement('style');
+style.innerHTML = `
+.code-http {
+    background-color: #fff3cd;
+    border-color: #ffecb5;
+    color: #856404;
+}
+
+#ssh-logins-filter {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+#ssh-logins-filter-clear {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+`;
+document.head.appendChild(style);
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM cargado, iniciando carga de datos...');
+    
+    loadSSHLogins();
+    loadSSHCommands();
+    loadSSHMalware();
+    loadTopIPs();
+    loadCredentials();
+    loadCountries();
+    
+    setTimeout(function() {
+        console.log('Cargando gráficos con un pequeño retraso para asegurar que el DOM esté listo...');
+        loadSSHActivityCharts();
+    }, 500);
+    
+    loadTopCommands();
+    
+});
+</script>
+{% endblock %}

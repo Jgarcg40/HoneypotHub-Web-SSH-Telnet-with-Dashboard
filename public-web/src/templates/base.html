@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Portal de Servicios{% endblock %}</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-globe"></i> Portal de Servicios
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('about') }}">Acerca de</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('contact') }}">Contacto</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    {% if session.get('logged_in') %}
+                        {% if session.get('is_admin') %}
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-light me-2">
+                            <i class="fas fa-tachometer-alt"></i> Panel Admin
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('perfil') }}" class="btn btn-light me-2">
+                            <i class="fas fa-user"></i> Mi Perfil
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('logout') }}" class="btn btn-outline-light">
+                            <i class="fas fa-sign-out-alt"></i> Salir
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-light">
+                            <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+   
+    <main class="container my-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5>Portal de Servicios</h5>
+                    <p>Ofrecemos soluciones integrales para todas tus necesidades digitales.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Enlaces rápidos</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('index') }}" class="text-white">Inicio</a></li>
+                        <li><a href="{{ url_for('about') }}" class="text-white">Acerca de</a></li>
+                        <li><a href="{{ url_for('contact') }}" class="text-white">Contacto</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Contacto</h5>
+                    <address>
+                        <i class="fas fa-map-marker-alt"></i> Calle Principal 123<br>
+                        <i class="fas fa-phone"></i> +34 912 345 678<br>
+                        <i class="fas fa-envelope"></i> info@portalservicios.com
+                    </address>
+                </div>
+            </div>
+            <hr>
+            <div class="text-center">
+                <p>&copy; 2023 Portal de Servicios. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

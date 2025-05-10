@@ -1,0 +1,448 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio - Dashboard de Análisis{% endblock %}
+
+{% block page_title %}Dashboard de Análisis de Honeypot{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bg-purple {
+        background-color: #6f42c1;
+    }
+    
+    .bg-indigo {
+        background-color: #6610f2;
+    }
+    
+    .bg-pink {
+        background-color: #e83e8c;
+    }
+    
+    .bg-orange-dark {
+        background-color: #d85b00;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h2>Bienvenido al Dashboard de Análisis</h2>
+                <p class="lead">Monitoreo y análisis en tiempo real de intentos de acceso y actividades sospechosas.</p>
+                <div class="alert alert-info">
+                    <i class="fas fa-sync-alt me-2"></i> Los datos se actualizan automáticamente cada minuto.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h3 class="mb-3">Estadísticas Generales</h3>
+    </div>
+    <div class="col-md-4 col-sm-6 mb-4">
+        <div class="card bg-primary text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-sign-in-alt fa-3x mb-3"></i>
+                <h5 class="card-title">Intentos de Login</h5>
+                <p class="card-text display-4" id="login-attempts-count">0</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-6 mb-4">
+        <div class="card bg-info text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-3x mb-3"></i>
+                <h5 class="card-title">Usuarios Únicos</h5>
+                <p class="card-text display-4" id="unique-usernames-count">0</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-6 mb-4">
+        <div class="card bg-secondary text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-key fa-3x mb-3"></i>
+                <h5 class="card-title">Contraseñas Únicas</h5>
+                <p class="card-text display-4" id="unique-passwords-count">0</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 col-sm-6 mb-4">
+        <div class="card bg-warning text-dark h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-network-wired fa-3x mb-3"></i>
+                <h5 class="card-title">Conexiones Totales</h5>
+                <p class="card-text display-4" id="total-connections-count">0</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-6 mb-4">
+        <div class="card bg-dark text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-map-marker-alt fa-3x mb-3"></i>
+                <h5 class="card-title">IPs Únicas</h5>
+                <p class="card-text display-4" id="total-ips-count">0</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-6 mb-4">
+        <div class="card bg-success text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-user-secret fa-3x mb-3"></i>
+                <h5 class="card-title">Conexiones Anónimas</h5>
+                <p class="card-text display-4" id="anonymous-connections-count">0</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4 col-sm-6 mb-4">
+        <div class="card bg-orange-dark text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-key fa-3x mb-3"></i>
+                <h5 class="card-title">Intentos SSH/Telnet</h5>
+                <p class="card-text display-4" id="ssh-telnet-login-attempts-count">0</p>
+                <div class="small mt-2">
+                    <span id="ssh-login-attempts-badge" class="badge bg-light text-dark me-1">SSH: 0</span>
+                    <span id="telnet-login-attempts-badge" class="badge bg-warning text-dark">Telnet: 0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-6 mb-4">
+        <div class="card bg-indigo text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-terminal fa-3x mb-3"></i>
+                <h5 class="card-title">Comandos SSH/Telnet</h5>
+                <p class="card-text display-4" id="ssh-telnet-commands-count">0</p>
+                <div class="small mt-2">
+                    <span id="ssh-commands-badge" class="badge bg-light text-dark me-1">SSH: 0</span>
+                    <span id="telnet-commands-badge" class="badge bg-warning text-dark">Telnet: 0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 col-sm-6 mb-4">
+        <div class="card bg-pink text-white h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-virus fa-3x mb-3"></i>
+                <h5 class="card-title">Malware Capturado</h5>
+                <p class="card-text display-4" id="ssh-telnet-malware-count">0</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h3 class="mb-3">Actividad Reciente</h3>
+    </div>
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Eventos por Hora</h6>
+            </div>
+            <div class="card-body">
+                <p>Este gráfico muestra la distribución de eventos por hora, permitiendo identificar patrones de actividad durante el día.</p>
+                <div class="chart-container">
+                    <div id="hourly-chart-loading" class="text-center py-5">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2">Cargando datos...</p>
+                    </div>
+                    <div id="hourly-chart-empty" class="text-center py-5 d-none">
+                        <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+                        <p>No hay suficientes datos para mostrar el gráfico.</p>
+                        <p class="small text-muted">Los datos aparecerán cuando se registren eventos.</p>
+                    </div>
+                    <img id="hourly-chart" class="chart-img d-none" alt="Gráfico de eventos por hora" />
+                </div>
+                <div class="mt-3">
+                    <h6>Análisis de actividad por hora:</h6>
+                    <ul>
+                        <li>Las horas pico pueden indicar actividad de bots programados.</li>
+                        <li>Patrones consistentes en horarios específicos sugieren ataques automatizados.</li>
+                        <li>Picos repentinos pueden representar un ataque coordinado o un escaneo masivo.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Eventos por Día</h6>
+            </div>
+            <div class="card-body">
+                <p>Este gráfico muestra la distribución de eventos por día, permitiendo identificar tendencias a lo largo del tiempo.</p>
+                <div class="chart-container">
+                    <div id="daily-chart-loading" class="text-center py-5">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2">Cargando datos...</p>
+                    </div>
+                    <div id="daily-chart-empty" class="text-center py-5 d-none">
+                        <i class="fas fa-chart-bar fa-4x text-muted mb-3"></i>
+                        <p>No hay suficientes datos para mostrar el gráfico.</p>
+                        <p class="small text-muted">Los datos aparecerán cuando se registren eventos durante varios días.</p>
+                    </div>
+                    <img id="daily-chart" class="chart-img d-none" alt="Gráfico de eventos por día" />
+                </div>
+                <div class="mt-3">
+                    <h6>Análisis de actividad por día:</h6>
+                    <ul>
+                        <li>Los fines de semana suelen mostrar patrones diferentes a los días laborables.</li>
+                        <li>Incrementos progresivos pueden indicar que el honeypot ha sido incluido en más listas de objetivos.</li>
+                        <li>Caídas abruptas podrían significar que los atacantes han dejado de considerar el sistema como un objetivo valioso.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const charts = {};
+        let isModalOpen = false;
+
+        const formatDate = (dateString) => {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        };
+
+        const toggleLoading = (elementId, isLoading) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.style.display = isLoading ? 'block' : 'none';
+            }
+        };
+
+        const showNotification = (message, type = 'info') => {
+            const alert = document.getElementById('update-alert');
+            const alertMessage = document.getElementById('update-message');
+
+            if (alert && alertMessage) {
+                alertMessage.textContent = message;
+                alert.className = `alert alert-${type}`;
+                alert.classList.remove('d-none');
+                setTimeout(() => {
+                    alert.classList.add('d-none');
+                }, 3000);
+            }
+        };
+
+        const updateCounter = (elementId, value) => {
+            const element = document.getElementById(elementId);
+            if (element && value !== undefined) {
+                const currentValue = parseInt(element.textContent) || 0;
+                const newValue = parseInt(value) || 0;
+                if (currentValue !== newValue) {
+                    animateCounter(element, currentValue, newValue);
+                }
+            }
+        };
+
+        const animateCounter = (element, start, end) => {
+            let current = start;
+            const increment = (end - start) / 30;
+            const timer = setInterval(() => {
+                current += increment;
+                if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                    clearInterval(timer);
+                    element.textContent = end;
+                } else {
+                    element.textContent = Math.round(current);
+                }
+            }, 20);
+        };
+
+        const updateHourlyChart = (chartData) => {
+            const hourlyChart = document.getElementById('hourly-chart');
+            const hourlyChartLoading = document.getElementById('hourly-chart-loading');
+            const hourlyChartEmpty = document.getElementById('hourly-chart-empty');
+
+            if (hourlyChart && hourlyChartLoading && hourlyChartEmpty) {
+                if (chartData) {
+                    hourlyChart.src = 'data:image/png;base64,' + chartData;
+                    hourlyChart.classList.remove('d-none');
+                    hourlyChartLoading.classList.add('d-none');
+                    hourlyChartEmpty.classList.add('d-none');
+                } else {
+                    hourlyChart.classList.add('d-none');
+                    hourlyChartLoading.classList.add('d-none');
+                    hourlyChartEmpty.classList.remove('d-none');
+                }
+            }
+        };
+
+        const updateDailyChart = (chartData) => {
+            const dailyChart = document.getElementById('daily-chart');
+            const dailyChartLoading = document.getElementById('daily-chart-loading');
+            const dailyChartEmpty = document.getElementById('daily-chart-empty');
+
+            if (dailyChart && dailyChartLoading && dailyChartEmpty) {
+                if (chartData) {
+                    dailyChart.src = 'data:image/png;base64,' + chartData;
+                    dailyChart.classList.remove('d-none');
+                    dailyChartLoading.classList.add('d-none');
+                    dailyChartEmpty.classList.add('d-none');
+                } else {
+                    dailyChart.classList.add('d-none');
+                    dailyChartLoading.classList.add('d-none');
+                    dailyChartEmpty.classList.remove('d-none');
+                }
+            }
+        };
+
+        window.updateStats = function() {
+            if (window._updateStatsEnabled === false) return;
+            
+            fetch('/api/stats')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                 })
+                .then(data => {
+                    if (data.error) {
+                         console.error('Error from API:', data.error);
+                         showNotification('Error al obtener estadísticas del API', 'danger');
+                         return; 
+                    }
+                    updateCounter('login-attempts-count', data.login_attempts);
+                    updateCounter('unique-usernames-count', data.unique_usernames);
+                    updateCounter('unique-passwords-count', data.unique_passwords);
+                    updateCounter('total-ips-count', data.unique_ips);
+                    updateCounter('anonymous-connections-count', data.anonymous_connections);
+                    updateCounter('total-connections-count', data.total_connections); // Actualizar nuevo contador
+
+                    if (data.last_updated) {
+                        const lastUpdatedElement = document.getElementById('last-updated-time');
+                        if (lastUpdatedElement) {
+                            lastUpdatedElement.textContent = formatDate(data.last_updated);
+                        }
+                    }
+
+                    updateHourlyChart(data.hourly_chart);
+                    updateDailyChart(data.daily_chart);
+                })
+                .catch(error => {
+                    console.error('Error al cargar estadísticas:', error);
+                    showNotification('Error al actualizar datos: ' + error.message, 'danger');
+                });
+                
+            fetch('/api/ssh_statistics')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const totalLoginAttempts = (parseInt(data.ssh_login_attempts) || 0) + (parseInt(data.telnet_login_attempts) || 0);
+                    updateCounter('ssh-telnet-login-attempts-count', totalLoginAttempts);
+                    document.getElementById('ssh-login-attempts-badge').textContent = 'SSH: ' + (data.ssh_login_attempts || '0');
+                    document.getElementById('telnet-login-attempts-badge').textContent = 'Telnet: ' + (data.telnet_login_attempts || '0');
+                    
+                    const totalCommands = (parseInt(data.ssh_commands) || 0) + (parseInt(data.telnet_commands) || 0);
+                    updateCounter('ssh-telnet-commands-count', totalCommands);
+                    document.getElementById('ssh-commands-badge').textContent = 'SSH: ' + (data.ssh_commands || '0');
+                    document.getElementById('telnet-commands-badge').textContent = 'Telnet: ' + (data.telnet_commands || '0');
+                    
+                    const totalMalware = (parseInt(data.ssh_malware) || 0) + (parseInt(data.telnet_malware) || 0);
+                    updateCounter('ssh-telnet-malware-count', totalMalware);
+                })
+                .catch(error => {
+                    console.error('Error al cargar estadísticas SSH/Telnet:', error);
+                });
+        };
+
+        const setupPeriodicUpdates = () => {
+            window._updateStatsEnabled = true;
+            
+            setInterval(() => {
+                if (typeof window.updateStats === 'function' && window._updateStatsEnabled !== false) {
+                    window.updateStats();
+                }
+            }, 60000);
+        };
+
+        setupPeriodicUpdates();
+
+        if (typeof window.updateStats === 'function') {
+            window.updateStats();
+        }
+        
+        const resetDatabaseBtn = document.getElementById('reset-database-btn');
+        const confirmResetBtn = document.getElementById('confirm-reset-btn');
+        const resetConfirmModal = document.getElementById('resetConfirmModal');
+        
+        if (resetConfirmModal) {
+            resetConfirmModal.addEventListener('show.bs.modal', function() {
+                isModalOpen = true;
+            });
+            
+            resetConfirmModal.addEventListener('hidden.bs.modal', function() {
+                isModalOpen = false;
+            });
+        }
+        
+        if (resetDatabaseBtn) {
+            resetDatabaseBtn.addEventListener('click', function() {
+                const resetModal = new bootstrap.Modal(document.getElementById('resetConfirmModal'));
+                resetModal.show();
+            });
+        }
+        
+        if (confirmResetBtn) {
+            confirmResetBtn.addEventListener('click', function() {
+                confirmResetBtn.disabled = true;
+                confirmResetBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Reseteando...';
+                
+                fetch('/api/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const resetModal = bootstrap.Modal.getInstance(document.getElementById('resetConfirmModal'));
+                    resetModal.hide();
+                    
+                    showNotification(data.message, 'success');
+                    
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                })
+                .catch(error => {
+                    console.error('Error al resetear la base de datos:', error);
+                    showNotification('Error al resetear la base de datos: ' + error.message, 'danger');
+                })
+                .finally(() => {
+                    confirmResetBtn.disabled = false;
+                    confirmResetBtn.innerHTML = '<i class="fas fa-trash-alt me-2"></i> Sí, borrar todo';
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

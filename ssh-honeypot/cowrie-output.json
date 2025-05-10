@@ -1,0 +1,29 @@
+{
+    "output_plugins": [
+        {
+            "name": "mongodb",
+            "config": {
+                "connection_string": "mongodb://mongo:27017/",
+                "database": "honeypot",
+                "authentication_source": null,
+                "collections": {
+                    "events": "events",
+                    "auth": "login_attempts",
+                    "command": "commands",
+                    "input": "input",
+                    "download": "malware",
+                    "telnet": "telnet_events",
+                    "telnet_download": "telnet_downloads",
+                    "session": "sessions"
+                }
+            }
+        },
+        {
+            "name": "jsonlog",
+            "config": {
+                "logfile": "var/log/cowrie/cowrie.jsonlog",
+                "epoch_timestamp": false
+            }
+        }
+    ]
+} 

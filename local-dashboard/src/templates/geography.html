@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+
+{% block title %}Distribución Geográfica de los ataques - Dashboard de Análisis{% endblock %}
+
+{% block page_title %}Distribución Geográfica de los ataques{% endblock %}
+
+{% block extra_css %}
+<style>
+    .geo-distribution-header {
+        background-color: #4e73df;
+        color: white;
+        padding: 15px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .country-flag {
+        width: 24px;
+        height: 18px;
+        margin-right: 8px;
+        vertical-align: middle;
+    }
+    
+    .ip-with-flag {
+        display: flex;
+        align-items: center;
+    }
+    
+    .ip-flag {
+        margin-right: 5px;
+        width: 16px;
+        height: 12px;
+    }
+    
+    .country-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.2s;
+    }
+    
+    .country-item:hover {
+        background-color: rgba(78, 115, 223, 0.1);
+    }
+    
+    .country-name {
+        font-weight: 600;
+        flex-grow: 1;
+    }
+    
+    .country-count {
+        background-color: #4e73df;
+        color: white;
+        border-radius: 20px;
+        padding: 3px 10px;
+        font-size: 0.9rem;
+        font-weight: bold;
+    }
+    
+    .country-percentage {
+        margin-left: 10px;
+        color: #666;
+        width: 60px;
+        text-align: right;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-primary bg-gradient text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-globe me-2"></i> Distribución Geográfica de Ataques</h5>
+            </div>
+            <div class="card-body">
+                <div class="geo-distribution-header">
+                    <i class="fas fa-info-circle me-2"></i> Esta sección muestra la distribución geográfica de las IPs desde donde se han intentado conexiones al sistema.
+                </div>
+                
+                <div id="geography-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando datos geográficos...</p>
+                </div>
+                
+                <div id="geography-error" class="alert alert-danger d-none">
+                    Error al cargar datos. <span id="geography-error-message"></span>
+                </div>
+                
+                <div id="geography-empty" class="alert alert-warning d-none">
+                    No hay información geográfica disponible.
+                </div>
+                
+                <div class="table-responsive">
+                    <div class="d-flex justify-content-between mb-3">
+                        <h6 class="fw-bold"><i class="fas fa-flag me-2"></i>Países de Origen de Ataques</h6>
+                        <div>
+                            <span id="total-countries-badge" class="badge bg-primary me-2">0 países</span>
+                            <span id="total-attacks-badge" class="badge bg-danger">0 ataques totales</span>
+                        </div>
+                    </div>
+                    
+                    <table id="countries-table" class="table table-hover table-striped">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>País</th>
+                                <th>Ataques</th>
+                                <th>Porcentaje</th>
+                            </tr>
+                        </thead>
+                        <tbody id="countries-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>IPs Maliciosas</h5>
+            </div>
+            <div class="card-body">
+                <p>Las IPs marcadas como maliciosas han sido identificadas por servicios de reputación como fuentes potenciales de ataques o actividades maliciosas.</p>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <strong>Advertencia:</strong> Estas IPs pueden estar involucradas en actividades como:
+                    <ul class="mb-0 mt-2">
+                        <li>Ataques de fuerza bruta</li>
+                        <li>Escaneo de puertos</li>
+                        <li>Distribución de malware</li>
+                        <li>Participación en botnets</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-user-secret me-2"></i>Conexiones Anónimas</h5>
+            </div>
+            <div class="card-body">
+                <p>Las conexiones anónimas provienen de servicios que ocultan la identidad real del usuario, como:</p>
+                <ul>
+                    <li><strong>VPN:</strong> Redes privadas virtuales que cifran el tráfico y ocultan la IP real</li>
+                    <li><strong>Tor:</strong> Red de anonimato que enruta el tráfico a través de múltiples nodos</li>
+                    <li><strong>Proxies:</strong> Servidores intermediarios que enmascaran la IP original</li>
+                </ul>
+                <div class="alert alert-warning">
+                    <i class="fas fa-user-secret me-2"></i>
+                    No todas las conexiones anónimas son maliciosas, pero son comúnmente utilizadas para ocultar actividades potencialmente dañinas.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.initGeographyPage = function() {
+        const loadingElement = document.getElementById('geography-loading');
+        if (loadingElement) {
+            loadingElement.style.display = 'block';
+        }
+        
+        fetch('/api/geo')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Error del servidor: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                processCountriesData(data);
+                
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar datos geográficos:', error);
+                
+                const errorElement = document.getElementById('geography-error');
+                const errorMessage = document.getElementById('geography-error-message');
+                
+                if (errorElement && errorMessage) {
+                    errorMessage.textContent = error.message;
+                    errorElement.classList.remove('d-none');
+                }
+                
+                if (loadingElement) {
+                    loadingElement.style.display = 'none';
+                }
+            });
+    };
+    
+    function formatCountryWithFlag(countryCode, country) {
+        const code = (typeof countryCode === 'string' && countryCode) ? countryCode.toLowerCase() : '';
+        const flag = code ? 
+            `<img src="https://flagcdn.com/16x12/${code}.png" class="country-flag ip-flag" alt="${country || code || ''}" title="${country || code || ''}">` : '';
+        
+        const displayName = country || code || 'Desconocido';
+
+        return `
+            <div class="ip-with-flag">
+                ${flag}
+                <span>${displayName}</span>
+            </div>
+        `;
+    }
+    
+    function processCountriesData(data) {
+        try {
+            const countriesMap = new Map();
+            let totalAttempts = 0;
+            
+            data.forEach(item => {
+                if (item.country && item.country !== 'Unknown' && item.country !== 'Desconocido') {
+                    
+                    const countryCode = item.country_code || item.countryCode || (item.country.length === 2 ? item.country : '');
+                    
+                    const countryData = {
+                        country: item.country,
+                        country_code: countryCode,
+                        count: item.count || 1
+                    };
+                    
+                    totalAttempts += countryData.count;
+                    
+                    if (countriesMap.has(item.country)) {
+                        const existing = countriesMap.get(item.country);
+                        existing.count += countryData.count;
+                    } else {
+                        countriesMap.set(item.country, countryData);
+                    }
+                }
+            });
+            
+            const countriesArray = Array.from(countriesMap.values())
+                .sort((a, b) => b.count - a.count);
+            
+            const countriesTableBody = document.getElementById('countries-table-body');
+            if (countriesTableBody) {
+                countriesTableBody.innerHTML = '';
+                
+                if (countriesArray.length === 0) {
+                    document.getElementById('geography-empty').classList.remove('d-none');
+                    return;
+                }
+                
+                countriesArray.forEach(item => {
+                    const row = document.createElement('tr');
+                    const percentage = totalAttempts > 0 ? ((item.count / totalAttempts) * 100).toFixed(1) : 0;
+                    
+                    const countryWithFlag = formatCountryWithFlag(item.country_code, item.country);
+                    
+                    row.innerHTML = `
+                        <td>${countryWithFlag}</td>
+                        <td><span class="badge bg-primary">${item.count}</span></td>
+                        <td><div class="progress" style="height: 20px;">
+                              <div class="progress-bar bg-primary" role="progressbar" style="width: ${percentage}%;" 
+                                   aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">${percentage}%</div>
+                            </div>
+                        </td>
+                    `;
+                    
+                    countriesTableBody.appendChild(row);
+                });
+                
+                if ($.fn.DataTable.isDataTable('#countries-table')) {
+                    $('#countries-table').DataTable().destroy();
+                }
+                
+                $('#countries-table').DataTable({
+                    ordering: true,
+                    order: [[1, 'desc']],
+                    pageLength: -1,
+                    lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, "Todos"]],
+                    language: {
+                        lengthMenu: "Mostrar _MENU_ entradas",
+                        search: "Buscar:",
+                        paginate: {
+                            first: "Primero",
+                            last: "Último",
+                            next: "Siguiente",
+                            previous: "Anterior"
+                        },
+                        info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+                        infoEmpty: "Mostrando 0 a 0 de 0 entradas",
+                        emptyTable: "No hay datos disponibles",
+                        zeroRecords: "No se encontraron resultados"
+                    }
+                });
+                
+                document.getElementById('total-countries-badge').textContent = countriesArray.length + ' países';
+                document.getElementById('total-attacks-badge').textContent = totalAttempts + ' ataques totales';
+            }
+        } catch (error) {
+            console.error('Error en processCountriesData:', error);
+            const errorElement = document.getElementById('geography-error');
+            const errorMessage = document.getElementById('geography-error-message');
+            
+            if (errorElement && errorMessage) {
+                errorMessage.textContent = error.message;
+                errorElement.classList.remove('d-none');
+            }
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Iniciando carga de la página de geografía');
+        window.initGeographyPage();
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio - Portal de Servicios{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="jumbotron bg-light p-5 rounded">
+            <h1 class="display-4">Bienvenido a nuestro Portal de Servicios</h1>
+            <p class="lead">Ofrecemos soluciones digitales de alta calidad para particulares y empresas.</p>
+            <hr class="my-4">
+            <p>Descubre nuestros servicios premium diseñados para satisfacer todas tus necesidades tecnológicas.</p>
+            <a class="btn btn-primary btn-lg" href="#servicios" role="button">Ver Servicios</a>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mt-3">
+    <i class="fas fa-info-circle me-2"></i> ¿Necesitas una cuenta para acceder a nuestros servicios completos? Solicita tu acceso a través de nuestro <a href="{{ url_for('contact') }}" class="alert-link">formulario de contacto</a> indicando tus datos y el tipo de servicio que necesitas.
+</div>
+
+<section id="servicios" class="mt-5">
+    <h2 class="text-center mb-4">Nuestros Servicios</h2>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-cloud fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Servicios en la Nube</h5>
+                    <p class="card-text">Almacenamiento seguro y accesible desde cualquier lugar. Optimizado para empresas de todos los tamaños.</p>
+                </div>
+                <div class="card-footer bg-white border-0 text-center">
+                    <a href="#" class="btn btn-outline-primary">Más información</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-lock fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Seguridad Informática</h5>
+                    <p class="card-text">Protege tus datos y sistemas con nuestras soluciones avanzadas de seguridad y monitoreo 24/7.</p>
+                </div>
+                <div class="card-footer bg-white border-0 text-center">
+                    <a href="#" class="btn btn-outline-primary">Más información</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-code fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Desarrollo Web</h5>
+                    <p class="card-text">Creamos sitios web atractivos, responsivos y optimizados para mejorar tu presencia digital.</p>
+                </div>
+                <div class="card-footer bg-white border-0 text-center">
+                    <a href="#" class="btn btn-outline-primary">Más información</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mt-5 bg-light p-5 rounded">
+    <h2 class="text-center mb-4">¿Por qué elegirnos?</h2>
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check-circle text-success fa-2x me-3"></i>
+                </div>
+                <div>
+                    <h5>Experiencia Comprobada</h5>
+                    <p>Más de 10 años ofreciendo soluciones de calidad a clientes satisfechos.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check-circle text-success fa-2x me-3"></i>
+                </div>
+                <div>
+                    <h5>Soporte 24/7</h5>
+                    <p>Equipo de soporte disponible en todo momento para resolver tus dudas y problemas.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check-circle text-success fa-2x me-3"></i>
+                </div>
+                <div>
+                    <h5>Tecnología de Vanguardia</h5>
+                    <p>Utilizamos las herramientas y tecnologías más avanzadas del mercado.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-check-circle text-success fa-2x me-3"></i>
+                </div>
+                <div>
+                    <h5>Precios Competitivos</h5>
+                    <p>Ofrecemos la mejor relación calidad-precio del mercado con planes personalizados.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mt-5">
+    <h2 class="text-center mb-4">Testimonios de Clientes</h2>
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-center mb-3">
+                        <span class="text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </span>
+                    </div>
+                    <p class="card-text text-center">"Increíble servicio, siempre disponibles y atentos a nuestras necesidades. Altamente recomendados."</p>
+                    <p class="text-center mb-0"><strong>María García</strong></p>
+                    <p class="text-center text-muted small">Directora de Marketing, Empresa S.A.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-center mb-3">
+                        <span class="text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </span>
+                    </div>
+                    <p class="card-text text-center">"Han transformado nuestra presencia digital y mejorado significativamente nuestra seguridad informática."</p>
+                    <p class="text-center mb-0"><strong>Juan Pérez</strong></p>
+                    <p class="text-center text-muted small">CEO, Tecnologías XYZ</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-center mb-3">
+                        <span class="text-warning">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star-half-alt"></i>
+                        </span>
+                    </div>
+                    <p class="card-text text-center">"Profesionales comprometidos con resultados excepcionales. Su servicio al cliente es inigualable."</p>
+                    <p class="text-center mb-0"><strong>Laura Martínez</strong></p>
+                    <p class="text-center text-muted small">Gerente de Proyectos, Innovación Digital</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

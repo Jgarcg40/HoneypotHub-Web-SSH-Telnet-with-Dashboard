@@ -1,0 +1,557 @@
+{% extends 'base.html' %}
+
+{% block title %}Intentos de Contacto - Dashboard de Análisis{% endblock %}
+
+{% block page_title %}Análisis de Formularios de Contacto{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i> Esta sección muestra los intentos de contacto a través del formulario web, lo que puede revelar posibles intentos de reconocimiento o ataques.
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h1 class="display-4 text-primary" id="total-contacts">-</h1>
+                    <p class="text-muted">Total de Intentos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h1 class="display-4 text-info" id="unique-ips">-</h1>
+                    <p class="text-muted">IPs Únicas</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h1 class="display-4 text-success" id="unique-emails">-</h1>
+                    <p class="text-muted">Emails Únicos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <h1 class="display-4 text-warning" id="last-24h">-</h1>
+                    <p class="text-muted">Últimas 24 horas</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="fas fa-envelope"></i> Intentos de Contacto
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table id="contacts-table" class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>IP</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Asunto</th>
+                            <th>Mensaje</th>
+                            <th>User Agent</th>
+                        </tr>
+                    </thead>
+                    <tbody id="contacts-table-body">
+                        <tr>
+                            <td colspan="8" class="text-center">
+                                <div class="d-flex justify-content-center">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                </div>
+                                <p class="mt-2">Cargando datos...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-network-wired"></i> IPs más activas
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="ips-loading" class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2">Cargando datos de IPs, por favor espere...</p>
+                    </div>
+                    
+                    <div id="ips-table-container" class="table-responsive" style="display: none;">
+                        <table id="ip-stats-table" class="table table-striped table-hover" width="100%">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>IP</th>
+                                    <th>Cantidad</th>
+                                    <th>Primer Contacto</th>
+                                    <th>Último Contacto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="ips-contact-error" class="alert alert-danger mt-3" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        <span id="ips-contact-error-text"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-at"></i> Emails más utilizados
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="emails-loading" class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2">Cargando datos de emails, por favor espere...</p>
+                    </div>
+                    
+                    <div id="emails-table-container" class="table-responsive" style="display: none;">
+                        <table id="email-stats-table" class="table table-striped table-hover" width="100%">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Email</th>
+                                    <th>Cantidad</th>
+                                    <th>Último Contacto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="emails-error" class="alert alert-danger mt-3" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        <span id="emails-error-text"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(loadContactsData, 500);
+        
+        setInterval(loadContactsData, 60000);
+    });
+    
+    function formatIpAddress(ip, country, city, is_malicious, is_anonymous) {
+        console.log("formatIpAddress en contacts.html recibió:", {
+            ip: ip,
+            country: country,
+            city: city,
+            is_malicious: is_malicious,
+            is_anonymous: is_anonymous
+        });
+        
+        let statusClass = 'status-safe';
+        let statusTitle = 'IP Normal';
+        
+        if (is_malicious) {
+            statusClass = 'status-danger';
+            statusTitle = 'IP Maliciosa';
+        } else if (is_anonymous) {
+            statusClass = 'status-warning';
+            statusTitle = 'Conexión Anónima (VPN/Proxy)';
+        }
+        
+        const countryCode = country ? country.toLowerCase() : '';
+        const flag = countryCode ? 
+            `<img src="https://flagcdn.com/16x12/${countryCode}.png" class="ip-flag" alt="${country}" title="${country}">` : '';
+        
+        const locationText = city && country ? `${city}, ${country}` : (city || country || 'Ubicación desconocida');
+        
+        const badges = [];
+        if (is_malicious) {
+            badges.push('<span class="badge bg-danger ip-info-badge">Maliciosa</span>');
+        }
+        if (is_anonymous) {
+            badges.push('<span class="badge bg-warning text-dark ip-info-badge">VPN</span>');
+        }
+        
+        return `
+            <div class="ip-tooltip">
+                <span class="ip-container">
+                    <span class="status-indicator ${statusClass}" title="${statusTitle}"></span>
+                    ${ip || 'Desconocida'}
+                    ${flag}
+                    ${badges.join('')}
+                </span>
+                <div class="tooltip-content">
+                    <div><strong>IP:</strong> ${ip || 'Desconocida'}</div>
+                    <div><strong>País:</strong> ${country || 'Desconocido'}</div>
+                    <div><strong>Ciudad:</strong> ${city || 'Desconocido'}</div>
+                    <div><strong>VPN/Proxy:</strong> ${is_anonymous ? 'Sí' : 'No'}</div>
+                    <div><strong>Maliciosa:</strong> ${is_malicious ? 'Sí' : 'No'}</div>
+                </div>
+                <div class="ip-location">${locationText}</div>
+            </div>
+        `;
+    }
+    
+    function escapeHtml(unsafe) {
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+    }
+    
+    function formatDate(dateString) {
+        try {
+            const date = new Date(dateString);
+            return `${date.toLocaleDateString()}, ${date.toLocaleTimeString()}`;
+        } catch (e) {
+            return "Fecha desconocida";
+        }
+    }
+    
+    function loadContactsData() {
+        fetch('/api/contacts')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta del servidor: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                updateGeneralStats(data);
+                
+                updateContactsTable(data);
+                
+                updateIpStats(data);
+                
+                updateEmailStats(data);
+            })
+            .catch(error => {
+                console.error('Error al cargar datos de contacto:', error);
+                document.getElementById('contacts-table-body').innerHTML = 
+                    `<tr><td colspan="8" class="text-center text-danger">Error al cargar datos: ${error.message}</td></tr>`;
+            });
+    }
+    
+    function updateGeneralStats(data) {
+        document.getElementById('total-contacts').textContent = data.length;
+        
+        const uniqueIps = new Set(data.map(item => item.ip)).size;
+        document.getElementById('unique-ips').textContent = uniqueIps;
+        
+        const uniqueEmails = new Set(data.map(item => item.email)).size;
+        document.getElementById('unique-emails').textContent = uniqueEmails;
+        
+        const now = new Date();
+        const last24Hours = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+        const contactsLast24h = data.filter(item => {
+            try {
+                const contactDate = new Date(item.timestamp);
+                return contactDate >= last24Hours;
+            } catch (e) {
+                return false;
+            }
+        }).length;
+        document.getElementById('last-24h').textContent = contactsLast24h;
+    }
+    
+    function updateContactsTable(data) {
+        const tableBody = document.getElementById('contacts-table-body');
+        
+        if (!data || data.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="8" class="text-center">No hay datos disponibles</td></tr>';
+            return;
+        }
+        
+        tableBody.innerHTML = '';
+        
+        data.forEach(contact => {
+            const row = document.createElement('tr');
+            
+            const dateCell = document.createElement('td');
+            dateCell.textContent = formatDate(contact.timestamp);
+            row.appendChild(dateCell);
+            
+        
+            const ipCell = document.createElement('td');
+            ipCell.innerHTML = formatIpAddress(
+                contact.ip || 'N/A',
+                contact.country || '',
+                contact.city || '',
+                contact.is_malicious || false,
+                contact.is_anonymous || false
+            );
+            row.appendChild(ipCell);
+            
+            const nameCell = document.createElement('td');
+            nameCell.textContent = contact.name || 'N/A';
+            row.appendChild(nameCell);
+            
+            const emailCell = document.createElement('td');
+            emailCell.textContent = contact.email || 'N/A';
+            row.appendChild(emailCell);
+            
+            const phoneCell = document.createElement('td');
+            phoneCell.textContent = contact.phone || 'N/A';
+            row.appendChild(phoneCell);
+            
+            const subjectCell = document.createElement('td');
+            subjectCell.textContent = contact.subject || 'N/A';
+            row.appendChild(subjectCell);
+            
+            const messageCell = document.createElement('td');
+            if (contact.message) {
+                const shortMessage = contact.message.length > 50 
+                    ? contact.message.substring(0, 47) + '...'
+                    : contact.message;
+                messageCell.textContent = shortMessage;
+                messageCell.setAttribute('title', escapeHtml(contact.message));
+                messageCell.style.cursor = 'pointer';
+                messageCell.onclick = function() {
+                    alert('Mensaje completo:\n\n' + contact.message);
+                };
+            } else {
+                messageCell.textContent = 'N/A';
+            }
+            row.appendChild(messageCell);
+            
+            const uaCell = document.createElement('td');
+            if (contact.user_agent) {
+                const shortUA = contact.user_agent.length > 50 
+                    ? contact.user_agent.substring(0, 47) + '...'
+                    : contact.user_agent;
+                uaCell.textContent = shortUA;
+                uaCell.setAttribute('title', contact.user_agent);
+            } else {
+                uaCell.textContent = 'N/A';
+            }
+            row.appendChild(uaCell);
+            
+            tableBody.appendChild(row);
+        });
+        
+        if (!$.fn.DataTable.isDataTable('#contacts-table')) {
+            $('#contacts-table').DataTable({
+                order: [[0, 'desc']],  
+                pageLength: 10,
+                scrollX: true,
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json'
+                }
+            });
+        } else {
+            $('#contacts-table').DataTable().draw();
+        }
+    }
+    
+    function updateIpStats(data) {
+        document.getElementById('ips-loading').style.display = 'block';
+        document.getElementById('ips-table-container').style.display = 'none';
+        document.getElementById('ips-contact-error').style.display = 'none';
+        
+        try {
+            const ipStats = {};
+            data.forEach(contact => {
+                const ip = contact.ip || 'N/A';
+                if (!ipStats[ip]) {
+                    ipStats[ip] = {
+                        count: 1,
+                        firstSeen: contact.timestamp,
+                        lastSeen: contact.timestamp
+                    };
+                } else {
+                    ipStats[ip].count++;
+                    
+                    try {
+                        const currentFirst = new Date(ipStats[ip].firstSeen);
+                        const contactDate = new Date(contact.timestamp);
+                        
+                        if (contactDate < currentFirst) {
+                            ipStats[ip].firstSeen = contact.timestamp;
+                        }
+                        
+                        const currentLast = new Date(ipStats[ip].lastSeen);
+                        
+                        if (contactDate > currentLast) {
+                            ipStats[ip].lastSeen = contact.timestamp;
+                        }
+                    } catch (e) {
+                        console.error('Error al procesar fechas para IP:', e);
+                    }
+                }
+            });
+            
+            const ipStatsArray = Object.entries(ipStats).map(([ip, stats]) => ({
+                ip,
+                ...stats
+            }));
+            
+            ipStatsArray.sort((a, b) => b.count - a.count);
+            
+            const tableData = ipStatsArray.map((stat, index) => {
+                let ipInfo = { country: '', city: '', is_malicious: false, is_anonymous: false };
+                
+                const contactWithThisIp = data.find(contact => contact.ip === stat.ip);
+                if (contactWithThisIp) {
+                    ipInfo = {
+                        country: contactWithThisIp.country || '',
+                        city: contactWithThisIp.city || '',
+                        is_malicious: contactWithThisIp.is_malicious || false,
+                        is_anonymous: contactWithThisIp.is_anonymous || false
+                    };
+                }
+                
+                const ipFormatted = formatIpAddress(
+                    stat.ip,
+                    ipInfo.country,
+                    ipInfo.city,
+                    ipInfo.is_malicious,
+                    ipInfo.is_anonymous
+                );
+                
+                return [
+                    index + 1,  
+                    ipFormatted,
+                    stat.count,
+                    formatDate(stat.firstSeen),
+                    formatDate(stat.lastSeen)
+                ];
+            });
+            
+            if ($.fn.DataTable.isDataTable('#ip-stats-table')) {
+                $('#ip-stats-table').DataTable().destroy();
+            }
+            
+            $('#ip-stats-table').DataTable({
+                data: tableData,
+                deferRender: true,
+                ordering: true,
+                order: [[2, 'desc']], 
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100],
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json'
+                },
+                initComplete: function() {
+                    document.getElementById('ips-loading').style.display = 'none';
+                    document.getElementById('ips-table-container').style.display = 'block';
+                }
+            });
+        } catch (error) {
+            console.error('Error al procesar datos de IPs:', error);
+            document.getElementById('ips-loading').style.display = 'none';
+            document.getElementById('ips-contact-error').style.display = 'block';
+            document.getElementById('ips-contact-error-text').textContent = 'Error al procesar datos: ' + error.message;
+        }
+    }
+    
+    
+    function updateEmailStats(data) {
+        document.getElementById('emails-loading').style.display = 'block';
+        document.getElementById('emails-table-container').style.display = 'none';
+        document.getElementById('emails-error').style.display = 'none';
+        
+        try {
+            const emailStats = {};
+            data.forEach(contact => {
+                const email = contact.email || 'N/A';
+                if (!emailStats[email]) {
+                    emailStats[email] = {
+                        count: 1,
+                        lastSeen: contact.timestamp
+                    };
+                } else {
+                    emailStats[email].count++;
+                    
+                    try {
+                        const currentLast = new Date(emailStats[email].lastSeen);
+                        const contactDate = new Date(contact.timestamp);
+                        
+                        if (contactDate > currentLast) {
+                            emailStats[email].lastSeen = contact.timestamp;
+                        }
+                    } catch (e) {
+                        console.error('Error al procesar fechas para email:', e);
+                    }
+                }
+            });
+            
+            const emailStatsArray = Object.entries(emailStats).map(([email, stats]) => ({
+                email,
+                ...stats
+            }));
+            
+            emailStatsArray.sort((a, b) => b.count - a.count);
+            
+            const tableData = emailStatsArray.map((stat, index) => {
+                return [
+                    index + 1,  
+                    stat.email,
+                    stat.count,
+                    formatDate(stat.lastSeen)
+                ];
+            });
+            
+            if ($.fn.DataTable.isDataTable('#email-stats-table')) {
+                $('#email-stats-table').DataTable().destroy();
+            }
+            
+            $('#email-stats-table').DataTable({
+                data: tableData,
+                deferRender: true,
+                ordering: true,
+                order: [[2, 'desc']],
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100],
+                language: {
+                    url: 'https://cdn.datatables.net/plug-ins/1.10.25/i18n/Spanish.json'
+                },
+                initComplete: function() {
+                    document.getElementById('emails-loading').style.display = 'none';
+                    document.getElementById('emails-table-container').style.display = 'block';
+                }
+            });
+        } catch (error) {
+            console.error('Error al procesar datos de emails:', error);
+            document.getElementById('emails-loading').style.display = 'none';
+            document.getElementById('emails-error').style.display = 'block';
+            document.getElementById('emails-error-text').textContent = 'Error al procesar datos: ' + error.message;
+        }
+    }
+</script>
+{% endblock %} 

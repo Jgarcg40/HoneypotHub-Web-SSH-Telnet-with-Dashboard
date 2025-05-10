@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Contacto - Portal de Servicios{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Contacto</h1>
+    </div>
+</div>
+
+{% if success %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <strong>¡Mensaje enviado correctamente!</strong> Nos pondremos en contacto contigo lo antes posible.
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title">Información de Contacto</h4>
+                <p class="card-text">Estamos disponibles para ayudarte en todo lo que necesites. No dudes en ponerte en contacto con nosotros a través de cualquiera de los siguientes medios:</p>
+                
+                <div class="mt-4">
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-map-marker-alt text-primary fa-2x me-3"></i>
+                        </div>
+                        <div>
+                            <h5>Dirección</h5>
+                            <p>Calle Principal 123<br>28001 Madrid, España</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-phone text-primary fa-2x me-3"></i>
+                        </div>
+                        <div>
+                            <h5>Teléfono</h5>
+                            <p>+34 912 345 678</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex mb-3">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-envelope text-primary fa-2x me-3"></i>
+                        </div>
+                        <div>
+                            <h5>Email</h5>
+                            <p>info@portalservicios.com</p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-clock text-primary fa-2x me-3"></i>
+                        </div>
+                        <div>
+                            <h5>Horario de Atención</h5>
+                            <p>Lunes a Viernes: 9:00 - 18:00<br>Sábado: 10:00 - 14:00</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h5>Síguenos</h5>
+                    <div class="d-flex">
+                        <a href="#" class="me-3 text-decoration-none">
+                            <i class="fab fa-facebook fa-2x text-primary"></i>
+                        </a>
+                        <a href="#" class="me-3 text-decoration-none">
+                            <i class="fab fa-twitter fa-2x text-info"></i>
+                        </a>
+                        <a href="#" class="me-3 text-decoration-none">
+                            <i class="fab fa-linkedin fa-2x text-primary"></i>
+                        </a>
+                        <a href="#" class="me-3 text-decoration-none">
+                            <i class="fab fa-instagram fa-2x text-danger"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Envíanos un Mensaje</h4>
+                <p class="card-text">Completa el siguiente formulario y nos pondremos en contacto contigo lo antes posible.</p>
+                
+                <form action="{{ url_for('contact') }}" method="post" class="mt-4">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nombre completo</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Teléfono</label>
+                        <input type="tel" class="form-control" id="phone" name="phone">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Asunto</label>
+                        <input type="text" class="form-control" id="subject" name="subject" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Mensaje</label>
+                        <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="privacyCheck" required>
+                        <label class="form-check-label" for="privacyCheck">
+                            He leído y acepto la <a href="#">Política de Privacidad</a>
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Ubicación</h4>
+                <div class="ratio ratio-16x9">
+                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3037.6198874807486!2d-3.6836200252415443!3d40.41923835495909!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd422890b6720f19%3A0x703c81d0c2a10c0!2sPuerta%20del%20Sol%2C%20Madrid!5e0!3m2!1ses!2ses!4v1682430432152!5m2!1ses!2ses" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

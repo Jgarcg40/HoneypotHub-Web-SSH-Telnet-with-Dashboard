@@ -1,0 +1,1173 @@
+{% extends 'base.html' %}
+
+{% block title %}Bots, Crawlers y Escaneos - Dashboard de Análisis{% endblock %}
+
+{% block page_title %}Bots, Crawlers y Escaneos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-agent-text {
+        max-width: 300px;
+        display: inline-block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .flag-icon {
+        width: 16px;
+        height: 12px;
+        vertical-align: middle;
+        margin-right: 5px;
+    }
+    
+    .status-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+    
+    .status-safe {
+        background-color: #198754;
+    }
+    
+    .status-warning {
+        background-color: #ffc107;
+    }
+    
+    .status-danger {
+        background-color: #dc3545;
+    }
+    
+    .bot-badge {
+        padding: 5px 8px;
+        border-radius: 3px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .column-ip,
+    .column-path,
+    .column-route {
+        max-width: 250px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .column-ua {
+        max-width: 200px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .dataTables_wrapper .dataTables_scroll {
+        clear: both;
+    }
+    
+    .user-agent-text {
+        display: block;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .same-height-row {
+        display: flex;
+        flex-wrap: wrap;
+    }
+    
+    .same-height-row > [class*='col-'] {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .same-height-row .card {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .same-height-row .card-body {
+        flex: 1;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        max-height: 500px;
+        overflow-y: auto;
+        width: 100%;
+        max-width: 100vw;
+    }
+    
+    .compact-table th, 
+    .compact-table td {
+        padding: 0.5rem !important;
+        font-size: 0.9rem;
+    }
+    
+    .dashboard-container {
+        max-width: 100%;
+        padding: 0.5rem;
+        overflow-x: hidden;
+    }
+    
+    .main-table-container {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    @media (max-width: 992px) {
+        .card {
+            margin-bottom: 1rem;
+        }
+    }
+    
+    .dataTables_paginate {
+        white-space: nowrap;
+        font-size: 0.9rem;
+    }
+    
+    .dataTables_paginate .paginate_button {
+        padding: 0.25rem 0.5rem !important;
+    }
+    
+    table.dataTable td, 
+    table.dataTable th {
+        max-width: 150px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    td code {
+        max-width: 120px;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .card {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    div.dataTables_wrapper {
+        width: 100%;
+        margin: 0 auto;
+    }
+    
+    @media (max-width: 1200px) {
+        .compact-table th, 
+        .compact-table td {
+            padding: 0.25rem !important;
+            font-size: 0.8rem;
+        }
+        
+        .dataTables_length, 
+        .dataTables_filter, 
+        .dataTables_info, 
+        .dataTables_paginate {
+            font-size: 0.8rem;
+        }
+    }
+    
+    table.dataTable {
+        table-layout: fixed !important;
+        width: 100% !important;
+    }
+    
+    td code {
+        max-width: 200px;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.85rem;
+    }
+    
+    .btn-details {
+        padding: 0.2rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    table.dataTable thead th {
+        position: sticky;
+        text-align: center;
+        vertical-align: middle;
+    }
+    
+    .dataTables_wrapper {
+        overflow-x: visible;
+    }
+    
+    .fixed-table {
+        table-layout: fixed !important;
+        width: 100% !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+    }
+    
+    .fixed-table th,
+    .fixed-table td {
+        border: 1px solid #dee2e6 !important;
+        padding: 0.5rem !important;
+        position: relative !important;
+    }
+    
+    .fixed-table thead th {
+        background-color: #cfe2ff !important;
+        color: #000 !important;
+        border-bottom: 2px solid #b6d4fe !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
+        vertical-align: middle !important;
+        text-align: center !important;
+        box-shadow: 0 1px 0 rgba(0,0,0,0.1) !important;
+    }
+    
+    .fixed-table th.col-timestamp,
+    .fixed-table td.col-timestamp { min-width: 140px !important; width: 140px !important; }
+    
+    .fixed-table th.col-bot-type,
+    .fixed-table td.col-bot-type { min-width: 100px !important; width: 100px !important; }
+    
+    .fixed-table th.col-user-agent,
+    .fixed-table td.col-user-agent { min-width: 150px !important; width: 150px !important; }
+    
+    .fixed-table th.col-ip,
+    .fixed-table td.col-ip { min-width: 180px !important; width: 180px !important; }
+    
+    .fixed-table th.col-method,
+    .fixed-table td.col-method { min-width: 80px !important; width: 80px !important; }
+    
+    .fixed-table th.col-path,
+    .fixed-table td.col-path { min-width: 200px !important; width: 200px !important; }
+    
+    .fixed-table th.col-query,
+    .fixed-table td.col-query { min-width: 300px !important; width: 300px !important; }
+    
+    .fixed-table th.col-post,
+    .fixed-table td.col-post { min-width: 300px !important; width: 300px !important; }
+    
+    .fixed-table th.col-details,
+    .fixed-table td.col-details { min-width: 80px !important; width: 80px !important; }
+    
+    .fixed-table th.col-ip-addr,
+    .fixed-table td.col-ip-addr { min-width: 180px !important; width: 180px !important; }
+    
+    .fixed-table th.col-country,
+    .fixed-table td.col-country { min-width: 150px !important; width: 150px !important; }
+    
+    .fixed-table th.col-org,
+    .fixed-table td.col-org { min-width: 200px !important; width: 200px !important; }
+    
+    .fixed-table th.col-connections,
+    .fixed-table td.col-connections { min-width: 100px !important; width: 100px !important; }
+    
+    .fixed-table th.col-anonymous,
+    .fixed-table td.col-anonymous { min-width: 100px !important; width: 100px !important; }
+    
+    .fixed-table th.col-malicious,
+    .fixed-table td.col-malicious { min-width: 100px !important; width: 100px !important; }
+    
+    .fixed-table th.col-last-seen,
+    .fixed-table td.col-last-seen { min-width: 140px !important; width: 140px !important; }
+    
+    .post-data-cell,
+    .query-string-cell {
+        max-width: 280px !important;
+        width: 280px !important;
+    }
+    
+    .post-data-content,
+    .query-string-content {
+        display: block;
+        white-space: pre-wrap !important; 
+        word-break: break-word !important;
+        overflow: visible;
+        font-size: 0.9rem !important;
+        background-color: #f8f9fa !important;
+        padding: 8px !important;
+        border-radius: 4px !important;
+        border: 1px solid #dee2e6 !important;
+        max-height: 120px !important; /* Altura máxima con scroll vertical */
+        overflow-y: auto !important;
+        font-family: monospace !important;
+    }
+    
+    .query-string-content {
+        background-color: #f0f8ff !important; 
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+<div class="row">
+        <div class="col-md-12 mb-3">
+        <div class="card">
+                <div class="card-body py-2">
+                    <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle me-2"></i> Esta sección muestra todos los bots y rastreadores web detectados por el sistema.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="row mb-3">
+    <div class="col-md-12">
+        <div class="card">
+                <div class="card-header py-2">
+                    <h5 class="card-title mb-0">Historial de Bots Detectados</h5>
+            </div>
+            <div class="card-body">
+                    <div id="bots-loading" class="text-center py-3">
+                        <div class="spinner-border text-primary mb-2" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando datos...</p>
+                </div>
+                <div id="bots-error" class="alert alert-danger d-none">
+                    Error al cargar datos. <span id="bots-error-message"></span>
+                </div>
+                <div id="bots-empty" class="alert alert-warning d-none">
+                    No se han detectado bots hasta el momento.
+                </div>
+                    <div id="bots-container" class="table-scroll-container d-none">
+                        <table id="bots-table" class="table table-striped table-bordered fixed-table">
+                        <thead class="table-primary">
+                            <tr>
+                                    <th class="col-timestamp">Timestamp</th>
+                                    <th class="col-bot-type">Tipo de Bot</th>
+                                    <th class="col-user-agent">User Agent</th>
+                                    <th class="col-ip">IP / Origen</th>
+                                    <th class="col-method">Método</th>
+                                    <th class="col-path">Ruta</th>
+                                    <th class="col-details">Detalles</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bots-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="row same-height-row mb-3">
+        <div class="col-md-6 mb-3 mb-md-0">
+        <div class="card">
+                <div class="card-header py-2">
+                    <h5 class="card-title mb-0">Tipos de Bots</h5>
+            </div>
+            <div class="card-body">
+                <div id="bot-types-loading" class="text-center py-3">
+                    <div class="spinner-border text-primary mb-2" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando datos...</p>
+                </div>
+                <div id="bot-types-container" class="table-responsive d-none">
+                        <table id="bot-types-table" class="table table-striped table-bordered compact-table">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Tipo de Bot</th>
+                                <th>Cantidad</th>
+                                <th>Porcentaje</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bot-types-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+        <div class="col-md-6">
+        <div class="card">
+                <div class="card-header py-2">
+                    <h5 class="card-title mb-0">Rutas Más Accedidas</h5>
+            </div>
+            <div class="card-body">
+                <div id="bot-paths-loading" class="text-center py-3">
+                    <div class="spinner-border text-primary mb-2" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando datos...</p>
+                </div>
+                <div id="bot-paths-container" class="table-responsive d-none">
+                        <table id="bot-paths-table" class="table table-striped table-bordered compact-table">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Ruta</th>
+                                <th>Cantidad</th>
+                                <th>Porcentaje</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bot-paths-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="row mb-3">
+    <div class="col-md-12">
+        <div class="card">
+                <div class="card-header py-2">
+                    <h5 class="card-title mb-0">Top IPs</h5>
+            </div>
+            <div class="card-body">
+                <div id="top-ips-loading" class="text-center py-3">
+                    <div class="spinner-border text-primary mb-2" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando datos...</p>
+                </div>
+                <div id="top-ips-empty" class="alert alert-warning d-none">
+                    No hay datos de IPs disponibles.
+                </div>
+                    <div id="top-ips-container" class="table-scroll-container d-none">
+                        <table id="top-ips-table" class="table table-striped table-bordered fixed-table">
+                        <thead class="table-primary">
+                            <tr>
+                                    <th class="col-ip-addr">IP</th>
+                                    <th class="col-country">País / Ciudad</th>
+                                    <th class="col-org">Organización</th>
+                                    <th class="col-connections">Conexiones</th>
+                                    <th class="col-anonymous">Anónima</th>
+                                    <th class="col-malicious">Maliciosa</th>
+                                    <th class="col-last-seen">Último acceso</th>
+                                    <th class="col-details">Detalles</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-ips-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="row mb-3">
+    <div class="col-md-12">
+        <div class="card">
+                <div class="card-header py-2">
+                    <h5 class="card-title mb-0">Consultas y Datos POST</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> Esta sección muestra las consultas realizadas con parámetros GET y datos POST.
+                </div>
+                <div id="bot-queries-loading" class="text-center py-3">
+                    <div class="spinner-border text-primary mb-2" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2">Cargando datos...</p>
+                </div>
+                <div id="bot-queries-empty" class="alert alert-warning d-none">
+                    No se han detectado consultas con parámetros hasta el momento.
+                </div>
+                    <div id="bot-queries-container" class="table-scroll-container d-none">
+                        <table id="bot-queries-table" class="table table-striped table-bordered fixed-table">
+                        <thead class="table-primary">
+                            <tr>
+                                    <th class="col-timestamp">Timestamp</th>
+                                    <th class="col-bot-type">Tipo de Bot</th>
+                                    <th class="col-method">Método</th>
+                                    <th class="col-ip">IP / Origen</th>
+                                    <th class="col-path">Ruta</th>
+                                    <th class="col-query">Query String</th>
+                                    <th class="col-post">Datos POST</th>
+                                    <th class="col-details">Detalles</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bot-queries-table-body">
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        initBotsPage();
+        
+        setInterval(initBotsPage, 60000);
+    });
+    
+    function formatIpAddress(ip, country, city, is_malicious, is_anonymous, org) {
+        let statusClass = 'status-safe';
+        let statusTitle = 'IP Normal';
+        
+        if (is_malicious) {
+            statusClass = 'status-danger';
+            statusTitle = 'IP Maliciosa';
+        } else if (is_anonymous) {
+            statusClass = 'status-warning';
+            statusTitle = 'Conexión Anónima (VPN/Proxy)';
+        }
+        
+        const countryCode = country ? country.toLowerCase() : '';
+        const flag = countryCode ? 
+            `<img src="https://flagcdn.com/16x12/${countryCode}.png" class="ip-flag" alt="${country}" title="${country}">` : '';
+        
+        const locationText = city && country ? `${city}, ${country}` : (city || country || 'Ubicación desconocida');
+        
+        const badges = [];
+        if (is_malicious) {
+            badges.push('<span class="badge bg-danger ip-info-badge">Maliciosa</span>');
+        }
+        if (is_anonymous) {
+            badges.push('<span class="badge bg-warning text-dark ip-info-badge">VPN</span>');
+        }
+        
+        return `
+            <div class="ip-tooltip">
+                <span class="ip-container">
+                    <span class="status-indicator ${statusClass}" title="${statusTitle}"></span>
+                    ${ip || 'Desconocida'}
+                    ${flag}
+                    ${badges.join('')}
+                </span>
+                <div class="tooltip-content">
+                    <div><strong>IP:</strong> ${ip || 'Desconocida'}</div>
+                    <div><strong>País:</strong> ${country || 'Desconocido'}</div>
+                    <div><strong>Ciudad:</strong> ${city || 'Desconocido'}</div>
+                    <div><strong>Organización:</strong> ${org || 'Desconocido'}</div>
+                    <div><strong>VPN/Proxy:</strong> ${is_anonymous ? 'Sí' : 'No'}</div>
+                    <div><strong>Maliciosa:</strong> ${is_malicious ? 'Sí' : 'No'}</div>
+                </div>
+                <div class="ip-location">${locationText}</div>
+            </div>
+        `;
+    }
+    
+    function truncateText(text, maxLength = 100) {
+        if (!text) return 'N/A';
+        if (text.length <= maxLength) return text;
+        return text.substr(0, maxLength) + '...';
+    }
+    
+    function initBotsPage() {
+        document.getElementById('bots-loading').classList.remove('d-none');
+        document.getElementById('bots-container').classList.add('d-none');
+        document.getElementById('bots-error').classList.add('d-none');
+        document.getElementById('bots-empty').classList.add('d-none');
+        
+        document.getElementById('bot-types-loading').classList.remove('d-none');
+        document.getElementById('bot-types-container').classList.add('d-none');
+        document.getElementById('bot-paths-loading').classList.remove('d-none');
+        document.getElementById('bot-paths-container').classList.add('d-none');
+        document.getElementById('top-ips-loading').classList.remove('d-none');
+        document.getElementById('top-ips-container').classList.add('d-none');
+        document.getElementById('top-ips-empty').classList.add('d-none');
+        
+        document.getElementById('bot-queries-loading').classList.remove('d-none');
+        document.getElementById('bot-queries-container').classList.add('d-none');
+        document.getElementById('bot-queries-empty').classList.add('d-none');
+        
+        fetch('/api/bots')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al recuperar datos de bots: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data || data.length === 0) {
+                    document.getElementById('bots-loading').classList.add('d-none');
+                    document.getElementById('bots-empty').classList.remove('d-none');
+                    document.getElementById('top-ips-loading').classList.add('d-none');
+                    document.getElementById('top-ips-empty').classList.remove('d-none');
+                    return;
+                }
+                
+                const tableBody = document.getElementById('bots-table-body');
+                tableBody.innerHTML = '';
+                
+                const botTypes = {};
+                const botPaths = {};
+                const ipCounts = {};
+                const ipData = {};
+                
+                data.forEach(bot => {
+                    const row = document.createElement('tr');
+                    
+                    let timestamp = 'N/A';
+                    let timestampSorting = '';
+                    if (bot.timestamp) {
+                        const date = new Date(bot.timestamp);
+                        timestampSorting = date.getTime(); 
+                        timestamp = date.toLocaleString(); 
+                    }
+                    
+                    const ipHtml = formatIpAddress(
+                        bot.ip || 'N/A', 
+                        bot.country || '', 
+                        bot.city || '', 
+                        bot.is_malicious || false, 
+                        bot.is_vpn || false,
+                        bot.org || ''
+                    );
+                    
+                    if (bot.ip !== 'N/A') {
+                        ipCounts[bot.ip] = (ipCounts[bot.ip] || 0) + 1;
+                        ipData[bot.ip] = ipData[bot.ip] || {
+                            ip: bot.ip,
+                            country: bot.country || 'Desconocido',
+                            city: bot.city || '',
+                            org: bot.org || 'Desconocido',
+                            is_vpn: bot.is_vpn || false,
+                            is_malicious: bot.is_malicious || bot.is_known_malicious || false,
+                            last_seen: bot.timestamp || '',
+                            user_agent: bot.user_agent || 'Desconocido'
+                        };
+                        
+                        if (bot.timestamp && (!ipData[bot.ip].last_seen || new Date(bot.timestamp) > new Date(ipData[bot.ip].last_seen))) {
+                            ipData[bot.ip].last_seen = bot.timestamp;
+                        }
+                    }
+                    
+                    row.innerHTML = `
+                        <td data-sort="${timestampSorting}">${timestamp}</td>
+                        <td><span class="badge bg-secondary">${bot.bot_type || 'Desconocido'}</span></td>
+                        <td><small class="text-muted user-agent-text">${truncateText(bot.user_agent || 'N/A', 50)}</small></td>
+                        <td class="column-ip">${ipHtml}</td>
+                        <td><span class="badge ${bot.method === 'GET' ? 'bg-success' : 'bg-primary'}">${bot.method || 'N/A'}</span></td>
+                        <td class="column-path">${bot.path || 'N/A'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#botDetailsModal" 
+                                data-bot-details='${JSON.stringify(bot).replace(/'/g, "&#39;")}'>
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                    
+                    const botType = bot.bot_type || 'Desconocido';
+                    botTypes[botType] = (botTypes[botType] || 0) + 1;
+                    
+                    const path = bot.path || 'N/A';
+                    botPaths[path] = (botPaths[path] || 0) + 1;
+                });
+                
+                if ($.fn.DataTable.isDataTable('#bots-table')) {
+                    $('#bots-table').DataTable().destroy();
+                }
+                
+                $('#bots-table').DataTable({
+                    ordering: true,
+                    paging: true,
+                    searching: true,
+                    pageLength: 10,
+                    lengthMenu: [5, 10, 25, 50],
+                    language: {
+                        url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
+                    },
+                    order: [[0, 'desc']], 
+                    responsive: false, 
+                    scrollX: false, 
+                    autoWidth: false,
+                    fixedHeader: true
+                });
+                
+                updateBotTypesTable(botTypes, data.length);
+                
+                updateBotPathsTable(botPaths, data.length);
+                
+                updateTopIPs(ipCounts, ipData);
+                
+                document.getElementById('bots-loading').classList.add('d-none');
+                document.getElementById('bots-container').classList.remove('d-none');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('bots-loading').classList.add('d-none');
+                document.getElementById('bots-error').classList.remove('d-none');
+                document.getElementById('bots-error-message').textContent = error.message;
+            });
+            
+        fetch('/api/bot_queries')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al recuperar datos de consultas: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data || data.length === 0) {
+                    document.getElementById('bot-queries-loading').classList.add('d-none');
+                    document.getElementById('bot-queries-empty').classList.remove('d-none');
+                    return;
+                }
+                
+                const uniqueQueries = {};
+                data.forEach(query => {
+                    const postDataStr = JSON.stringify(query.post_data || {});
+                    const queryString = query.query_string || '';
+                    const uniqueKey = `${query.ip || 'unknown'}_${queryString}_${postDataStr}`;
+                    
+                    if (!uniqueQueries[uniqueKey] || 
+                        (query.timestamp && (!uniqueQueries[uniqueKey].timestamp || 
+                        new Date(query.timestamp) > new Date(uniqueQueries[uniqueKey].timestamp)))) {
+                        
+                        const clonedQuery = {...query};
+                        clonedQuery.count = (uniqueQueries[uniqueKey]?.count || 0) + 1;
+                        uniqueQueries[uniqueKey] = clonedQuery;
+                    } else {
+                        uniqueQueries[uniqueKey].count = (uniqueQueries[uniqueKey].count || 0) + 1;
+                    }
+                });
+                
+                const uniqueQueriesArray = Object.values(uniqueQueries);
+                
+                const tableBody = document.getElementById('bot-queries-table-body');
+                tableBody.innerHTML = '';
+                
+                uniqueQueriesArray.forEach(query => {
+                    const row = document.createElement('tr');
+                    
+                    let timestamp = 'N/A';
+                    let timestampSorting = '';
+                    if (query.timestamp) {
+                        const date = new Date(query.timestamp);
+                        timestampSorting = date.getTime(); 
+                        timestamp = date.toLocaleString(); 
+                    }
+                    
+                    
+                    const botInfo = query.bot_type ? 
+                        `<span class="badge bg-secondary">${query.bot_type}</span>` : 
+                        '';
+                    
+                    const ipHtml = formatIpAddress(
+                        query.ip || 'N/A', 
+                        query.country || '', 
+                        query.city || '', 
+                        query.is_malicious || false, 
+                        query.is_vpn || false,
+                        query.org || ''
+                    );
+                    
+                    const countBadge = query.count > 1 ? 
+                        `<span class="badge bg-warning ms-1" title="Número de repeticiones">${query.count}x</span>` : 
+                        '';
+                    
+                    const queryString = query.query_string || '';
+                    const postData = query.post_data ? JSON.stringify(query.post_data) : '';
+                    
+                    row.innerHTML = `
+                        <td class="col-timestamp" data-sort="${timestampSorting}">${timestamp} ${countBadge}</td>
+                        <td class="col-bot-type">${botInfo}</td>
+                        <td class="col-method"><span class="badge ${query.method === 'GET' ? 'bg-success' : 'bg-primary'}">${query.method || 'GET'}</span></td>
+                        <td class="col-ip">${ipHtml}</td>
+                        <td class="col-path">${query.path || 'N/A'}</td>
+                        <td class="col-query query-string-cell"><pre class="query-string-content">${formatQueryString(queryString)}</pre></td>
+                        <td class="col-post post-data-cell"><pre class="post-data-content">${formatText(postData)}</pre></td>
+                        <td class="col-details">
+                            <button class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#queryDetailsModal" 
+                                data-query-details='${JSON.stringify(query).replace(/'/g, "&#39;")}'>
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+                
+                if ($.fn.DataTable.isDataTable('#bot-queries-table')) {
+                    $('#bot-queries-table').DataTable().destroy();
+                }
+                
+                $('#bot-queries-table').DataTable({
+                    ordering: true,
+                    paging: true,
+                    searching: true,
+                    pageLength: 10,
+                    lengthMenu: [5, 10, 25],
+                    language: {
+                        url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
+                    },
+                    order: [[0, 'desc']], 
+                    responsive: false, 
+                    scrollX: false, 
+                    autoWidth: false,
+                    fixedHeader: true
+                });
+                
+                document.getElementById('bot-queries-loading').classList.add('d-none');
+                document.getElementById('bot-queries-container').classList.remove('d-none');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('bot-queries-loading').classList.add('d-none');
+                document.getElementById('bot-queries-empty').classList.remove('d-none');
+            });
+    }
+    
+    function updateBotTypesTable(botTypes, totalBots) {
+        const tableBody = document.getElementById('bot-types-table-body');
+        tableBody.innerHTML = '';
+        
+        const normalizedBotTypes = {};
+        
+        for (const [type, count] of Object.entries(botTypes)) {
+            const normalizedType = type.toLowerCase();
+            normalizedBotTypes[normalizedType] = (normalizedBotTypes[normalizedType] || 0) + count;
+        }
+        
+        const sortedTypes = Object.entries(normalizedBotTypes)
+            .map(([type, count]) => ({ type, count }))
+            .sort((a, b) => b.count - a.count);
+        
+        sortedTypes.forEach(item => {
+            const percentage = ((item.count / totalBots) * 100).toFixed(1);
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.type}</td>
+                <td>${item.count}</td>
+                <td>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: ${percentage}%;" 
+                            aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">
+                            ${percentage}%
+                        </div>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+        
+        if ($.fn.DataTable.isDataTable('#bot-types-table')) {
+            $('#bot-types-table').DataTable().destroy();
+        }
+        
+        $('#bot-types-table').DataTable({
+            paging: false,
+            searching: false,
+            order: [[1, 'desc']], 
+            info: false,
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
+            },
+            dom: '<"row"<"col-sm-6"l><"col-sm-6"f>><"row"<"col-sm-12"tr>><"row"<"col-sm-5"i><"col-sm-7"p>>'
+        });
+        
+       
+        document.getElementById('bot-types-loading').classList.add('d-none');
+        document.getElementById('bot-types-container').classList.remove('d-none');
+    }
+    
+    function updateBotPathsTable(botPaths, totalBots) {
+        const tableBody = document.getElementById('bot-paths-table-body');
+        tableBody.innerHTML = '';
+        
+    
+        const sortedPaths = Object.entries(botPaths)
+            .map(([path, count]) => ({ path, count }))
+            .sort((a, b) => b.count - a.count);
+        
+        sortedPaths.forEach(item => {
+            const percentage = ((item.count / totalBots) * 100).toFixed(1);
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.path}</td>
+                <td>${item.count}</td>
+                <td>
+                    <div class="progress">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: ${percentage}%;" 
+                            aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100">
+                            ${percentage}%
+                        </div>
+                    </div>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+        
+        if ($.fn.DataTable.isDataTable('#bot-paths-table')) {
+            $('#bot-paths-table').DataTable().destroy();
+        }
+        
+        $('#bot-paths-table').DataTable({
+            paging: false,
+            searching: false,
+            order: [[1, 'desc']], 
+            info: false,
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
+            },
+            dom: '<"row"<"col-sm-6"l><"col-sm-6"f>><"row"<"col-sm-12"tr>><"row"<"col-sm-5"i><"col-sm-7"p>>'
+        });
+        
+        document.getElementById('bot-paths-loading').classList.add('d-none');
+        document.getElementById('bot-paths-container').classList.remove('d-none');
+    }
+    
+    function updateTopIPs(ipCounts, ipData) {
+        const tableBody = document.getElementById('top-ips-table-body');
+        tableBody.innerHTML = '';
+        
+        const sortedIPs = Object.entries(ipCounts)
+            .map(([ip, count]) => ({ ip, count }))
+            .sort((a, b) => b.count - a.count);
+        
+        if (sortedIPs.length === 0) {
+            document.getElementById('top-ips-loading').classList.add('d-none');
+            document.getElementById('top-ips-empty').classList.remove('d-none');
+            return;
+        }
+        
+        
+        sortedIPs.forEach(item => {
+            const ip = item.ip;
+            const count = item.count;
+            const data = ipData[ip] || {};
+            
+            
+            const ipHtml = formatIpAddress(
+                ip, 
+                data.country || '', 
+                data.city || '', 
+                data.is_malicious || false, 
+                data.is_vpn || false,
+                data.org || ''
+            );
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="col-ip-addr">${ipHtml}</td>
+                <td class="col-country">${data.country || 'Desconocido'}${data.city ? `, ${data.city}` : ''}</td>
+                <td class="col-org">${data.org || 'Desconocido'}</td>
+                <td class="col-connections">${count}</td>
+                <td class="col-anonymous">${data.is_vpn ? '<span class="badge bg-warning text-dark">Sí</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+                <td class="col-malicious">${data.is_malicious ? '<span class="badge bg-danger">Sí</span>' : '<span class="badge bg-secondary">No</span>'}</td>
+                <td class="col-last-seen">${data.last_seen ? new Date(data.last_seen).toLocaleString() : 'Desconocido'}</td>
+                <td class="col-details">
+                    <button class="btn btn-sm btn-info btn-details" data-bs-toggle="modal" data-bs-target="#ipDetailsModal" 
+                    data-ip="${ip}" data-ip-details='${JSON.stringify(data).replace(/'/g, "&#39;")}'>
+                        <i class="fas fa-info-circle"></i>
+                    </button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+        
+       
+        if ($.fn.DataTable.isDataTable('#top-ips-table')) {
+            $('#top-ips-table').DataTable().destroy();
+        }
+        
+        $('#top-ips-table').DataTable({
+            ordering: true,
+            paging: true,
+            searching: true,
+            pageLength: 10,
+            lengthMenu: [5, 10, 25],
+            order: [[3, 'desc']], 
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
+            },
+            responsive: false,
+            scrollX: false,
+            autoWidth: false,
+            fixedHeader: true
+        });
+        
+        document.getElementById('top-ips-loading').classList.add('d-none');
+        document.getElementById('top-ips-container').classList.remove('d-none');
+    }
+    
+    function formatText(text, isJson = true) {
+        if (!text) return '';
+        
+        
+        const maxLength = 500;
+        const displayText = text.length > maxLength ? 
+            text.substr(0, maxLength) + '...' : 
+            text;
+            
+        
+        let formattedText = displayText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        
+       
+        if (isJson) {
+            try {
+                if (text.trim().startsWith('{') || text.trim().startsWith('[')) {
+                    const jsonObj = JSON.parse(text);
+                    formattedText = JSON.stringify(jsonObj, null, 2)
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;');
+                }
+            } catch (e) {
+            }
+        }
+        
+        return formattedText;
+    }
+    
+    function formatQueryString(queryString) {
+        if (!queryString) return '';
+        
+        try {
+            queryString = decodeURIComponent(queryString);
+        } catch (e) {
+        }
+        
+        if (queryString.includes('&')) {
+            return queryString.split('&').join('\n');
+        }
+        
+        return queryString;
+    }
+</script>
+
+<div class="modal fade" id="botDetailsModal" tabindex="-1" aria-labelledby="botDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="botDetailsModalLabel">Detalles del Bot</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="botDetailsContent" class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const botDetailsModal = document.getElementById('botDetailsModal');
+        if (botDetailsModal) {
+            botDetailsModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const botDetails = button.getAttribute('data-bot-details');
+                const contentContainer = document.getElementById('botDetailsContent');
+                
+                try {
+                    const decodedDetails = botDetails.replace(/&amp;/g, '&')
+                                                     .replace(/&lt;/g, '<')
+                                                     .replace(/&gt;/g, '>')
+                                                     .replace(/&#39;/g, "'")
+                                                     .replace(/&quot;/g, '"');
+                    const data = JSON.parse(decodedDetails);
+                    contentContainer.textContent = JSON.stringify(data, null, 2);
+                } catch (e) {
+                    console.error('Error al procesar los detalles del bot:', e);
+                    contentContainer.textContent = 'Error al procesar los detalles del bot. Detalles del error: ' + e.message;
+                }
+            });
+        }
+    });
+</script>
+
+<div class="modal fade" id="queryDetailsModal" tabindex="-1" aria-labelledby="queryDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="queryDetailsModalLabel">Detalles de la Consulta</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="queryDetailsContent" class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const queryDetailsModal = document.getElementById('queryDetailsModal');
+        if (queryDetailsModal) {
+            queryDetailsModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const queryDetails = button.getAttribute('data-query-details');
+                const contentContainer = document.getElementById('queryDetailsContent');
+                
+                try {
+                    const decodedDetails = queryDetails.replace(/&amp;/g, '&')
+                                                     .replace(/&lt;/g, '<')
+                                                     .replace(/&gt;/g, '>')
+                                                     .replace(/&#39;/g, "'")
+                                                     .replace(/&quot;/g, '"');
+                    const data = JSON.parse(decodedDetails);
+                    contentContainer.textContent = JSON.stringify(data, null, 2);
+                } catch (e) {
+                    console.error('Error al procesar los detalles de la consulta:', e);
+                    contentContainer.textContent = 'Error al procesar los detalles de la consulta. Detalles del error: ' + e.message;
+                }
+            });
+        }
+    });
+</script>
+
+<div class="modal fade" id="ipDetailsModal" tabindex="-1" aria-labelledby="ipDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ipDetailsModalLabel">Detalles de la IP</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="ipDetailsContent" class="bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ipDetailsModal = document.getElementById('ipDetailsModal');
+        if (ipDetailsModal) {
+            ipDetailsModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const ipDetails = button.getAttribute('data-ip-details');
+                const contentContainer = document.getElementById('ipDetailsContent');
+                
+                try {
+                    const decodedDetails = ipDetails.replace(/&amp;/g, '&')
+                                                     .replace(/&lt;/g, '<')
+                                                     .replace(/&gt;/g, '>')
+                                                     .replace(/&#39;/g, "'")
+                                                     .replace(/&quot;/g, '"');
+                    const data = JSON.parse(decodedDetails);
+                    contentContainer.textContent = JSON.stringify(data, null, 2);
+                } catch (e) {
+                    console.error('Error al procesar los detalles de la IP:', e);
+                    contentContainer.textContent = 'Error al procesar los detalles de la IP. Detalles del error: ' + e.message;
+                }
+            });
+        }
+    });
+</script>
+{% endblock %} 

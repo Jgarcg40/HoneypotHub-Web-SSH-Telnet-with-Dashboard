@@ -1,0 +1,183 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: honeypot-mongodb
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./ssh-honeypot/mongo-init.js:/docker-entrypoint-initdb.d/cowrie-init.js:ro
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:27017:27017"  
+    networks:
+      honeypot-internal:
+        aliases:
+          - mongo
+      honeypot_net:
+        aliases:
+          - mongo
+    environment:
+      - TZ=${TZ}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
+      - MONGO_INITDB_DATABASE=${MONGO_DATABASE}
+      - MONGO_APP_USER=${MONGO_APP_USER}
+      - MONGO_APP_PASSWORD=${MONGO_APP_PASSWORD}
+    user: mongodb  
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - DAC_OVERRIDE  
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200m"
+        max-file: "10"
+
+  public-web:
+    build:
+      context: ./public-web
+    container_name: honeypot-public-web
+    ports:
+      - "80:5000"
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - FLASK_ENV=production
+      - MONGO_APP_USER=${MONGO_APP_USER}
+      - MONGO_APP_PASSWORD=${MONGO_APP_PASSWORD}
+      - MONGO_DATABASE=${MONGO_DATABASE}
+      - MONGO_AUTH_DATABASE=${MONGO_AUTH_DATABASE}
+      - MONGODB_URI=${MONGODB_URI}
+      - IPINFO_API_KEY=${IPINFO_API_KEY}
+      - IPQUALITYSCORE_API_KEY=${IPQUALITYSCORE_API_KEY}
+      - REAL_IP_HEADER=${REAL_IP_HEADER}
+    networks:
+      - honeypot-internal
+      - public-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200m"
+        max-file: "10"
+
+  local-dashboard:
+    build:
+      context: ./local-dashboard
+    container_name: honeypot-dashboard
+    user: "999:999"
+    ports:
+      - "127.0.0.1:8080:8080"  
+      - "127.0.0.1:8443:8443"  
+    volumes:
+      - ./certs:/certs:ro
+      - type: bind
+        source: /var/lib/docker/volumes/honeypot-web_cowrie_dl/_data
+        target: /malware_files
+        read_only: true
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - FLASK_ENV=production
+      - ENABLE_HTTPS=true
+      - SSL_CERT_PATH=/certs/server.crt
+      - SSL_KEY_PATH=/certs/server.key
+      - DASHBOARD_USER=${DASHBOARD_USER}
+      - DASHBOARD_PASSWORD=${DASHBOARD_PASSWORD}
+      - SECRET_KEY=${DASHBOARD_SECRET_KEY}
+      - MONGO_APP_USER=${MONGO_APP_USER}
+      - MONGO_APP_PASSWORD=${MONGO_APP_PASSWORD}
+      - MONGO_DATABASE=${MONGO_DATABASE}
+      - MONGO_AUTH_DATABASE=${MONGO_AUTH_DATABASE}
+      - MONGODB_URI=${MONGODB_URI}
+      - IPINFO_API_KEY=${IPINFO_API_KEY}
+      - VIRUSTOTAL_API_KEY=${VIRUSTOTAL_API_KEY}
+    networks:
+      - honeypot-internal
+      - public-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200m"
+        max-file: "10"
+
+  cowrie:
+    image: cowrie/cowrie:latest
+    container_name: honeypot_cowrie
+    restart: unless-stopped
+    ports:
+      - "2222:2222"  
+      - "23:2223"      
+    volumes:
+      - ./ssh-honeypot/cowrie.cfg:/cowrie/cowrie-git/etc/cowrie.cfg:ro
+      - ./ssh-honeypot/userdb.txt:/cowrie/cowrie-git/etc/userdb.txt:ro
+      - ./ssh-honeypot/cowrie-output.json:/cowrie/cowrie-git/etc/cowrie-output.json:ro
+      - ./ssh-honeypot/seccomp-profile.json:/etc/docker/seccomp-cowrie.json:ro
+      - cowrie_data:/cowrie/cowrie-git/var/lib/cowrie
+      - cowrie_dl:/cowrie/cowrie-git/var/lib/cowrie/downloads
+      - cowrie_log:/cowrie/cowrie-git/var/log/cowrie
+    networks:
+      - honeypot_net
+      - honeypot-internal
+    security_opt:
+      - no-new-privileges:true
+      - seccomp=./ssh-honeypot/seccomp-profile.json
+      - apparmor=unconfined
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+      - SETUID
+      - SETGID
+      - CHOWN
+    read_only: true
+    tmpfs:
+      - /tmp:size=64M
+      - /run:size=64M
+    mem_limit: 1G
+    mem_reservation: 256M
+    cpus: 0.75
+    pids_limit: 100
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URI=mongodb://${MONGO_APP_USER}:${MONGO_APP_PASSWORD}@mongo:27017/${MONGO_DATABASE}?authSource=${MONGO_AUTH_DATABASE}
+      - MONGO_DB=${MONGO_DATABASE}
+
+networks:
+  honeypot-internal:
+    driver: bridge
+    internal: true  
+  public-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${PUBLIC_NETWORK_SUBNET}
+  honeypot_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/24
+    driver_opts:
+      com.docker.network.bridge.name: honeypot_net
+
+volumes:
+  mongodb_data: 
+  cowrie_data:
+  cowrie_dl:
+  cowrie_log:
+
+

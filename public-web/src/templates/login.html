@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Iniciar Sesión - Portal de Servicios{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión</h4>
+            </div>
+            <div class="card-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }}">
+                        <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }} me-2"></i>
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                {% endif %}
+                {% endwith %}
+                
+                <form method="post" action="{{ url_for('login') }}">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Nombre de usuario</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" class="form-control" id="username" name="username" required placeholder="Ingrese su nombre de usuario">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                            <input type="password" class="form-control" id="password" name="password" required placeholder="Ingrese su contraseña">
+                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                <i class="fas fa-eye" id="eyeIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="rememberMe">
+                        <label class="form-check-label" for="rememberMe">Recordarme</label>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="d-flex justify-content-center">
+                    <a href="#" class="text-decoration-none">¿Olvidó su contraseña?</a>
+                </div>
+            </div>
+            <div class="card-footer bg-light text-center">
+                <p>
+                    ¿No tiene cuenta? Para solicitar una cuenta, por favor contacte con nuestro departamento de soporte a través del <a href="{{ url_for('contact') }}">formulario de contacto</a>.
+                </p>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5>Información importante</h5>
+                <p>Para acceder a nuestros servicios, es necesario iniciar sesión con sus credenciales. Si no dispone de una cuenta, debe solicitarla a través de nuestro <a href="{{ url_for('contact') }}">formulario de contacto</a>.</p>
+                <p class="mb-0"><strong>¿Cómo solicitar una cuenta?</strong></p>
+                <ul class="mb-0 mt-2">
+                    <li>Complete el <a href="{{ url_for('contact') }}">formulario de contacto</a> con todos sus datos</li>
+                    <li>En el campo "Asunto", indique "Solicitud de nueva cuenta"</li>
+                    <li>Detalle qué servicios necesita en el mensaje</li>
+                    <li>Nuestro equipo revisará su solicitud y le contactará lo antes posible</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+        
+        togglePassword.addEventListener('click', function() {
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        });
+    });
+</script>
+{% endblock %} 
